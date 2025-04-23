@@ -1,0 +1,27 @@
+{
+    "build": {
+        "development": {
+            "developmentClient": true,
+            "distribution": "internal",
+            "env": {
+                "ANDROID_HOME": "/Users/neel/Library/Android/sdk"
+            },
+            "ios": {
+                "simulator": true
+            }
+        },
+        "preview": {
+            "android": {
+                "buildType": "apk"
+            },
+            "env": {
+                "ANDROID_HOME": "/Users/neel/Library/Android/sdk"
+            }
+        },
+        "production": {
+            "env": {
+                "ANDROID_HOME": "/Users/neel/Library/Android/sdk"
+            }
+        }
+    }
+}
