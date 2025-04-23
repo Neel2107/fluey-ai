@@ -15,7 +15,12 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ],
+      "package": "com.flueyai.app"
     },
     "web": {
       "bundler": "metro",
@@ -50,6 +55,14 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "c4122a40-0bd5-4bac-836b-db8e21c4bb34"
+      }
     }
   }
 }
