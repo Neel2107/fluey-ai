@@ -20,6 +20,7 @@ import { ScrollView } from "react-native-gesture-handler";
 
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from 'expo-router';
+import { StatusBar } from "expo-status-bar";
 
 export default function Index() {
   const [inputText, setInputText] = useState("");
@@ -40,7 +41,7 @@ export default function Index() {
 
   return (
     <SafeAreaView className="flex-1 bg-zinc-900">
-
+      <StatusBar style='dark' />
       <View className="flex-row justify-between items-center p-4 border-b border-zinc-700">
         <TouchableOpacity>
           <Menu color="white" size={24} />

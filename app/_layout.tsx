@@ -21,8 +21,8 @@ export default function RootLayout() {
 
   if (!fontsLoaded && !error) {
     return null;
-  } 
-  
+  }
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <StatusBar style="dark" />
@@ -33,18 +33,20 @@ export default function RootLayout() {
           animationDuration: 200,
           presentation: "transparentModal",
           contentStyle: {
-            backgroundColor: "#18181b", 
-          }
+            backgroundColor: "#18181b",
+          }, 
+          navigationBarColor: "#18181b",
+          statusBarStyle: "dark",
         }}
       >
-        <Stack.Screen 
-          name="index" 
+        <Stack.Screen
+          name="index"
           options={{
             animation: "fade",
           }}
         />
-        <Stack.Screen 
-          name="chat" 
+        <Stack.Screen
+          name="chat"
           options={{
             animation: "fade",
           }}
