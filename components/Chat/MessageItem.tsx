@@ -1,10 +1,11 @@
-import React from 'react';
 import { Message } from '@/types/chat';
+import React from 'react';
 import Animated, {
     FadeIn,
     FadeInRight,
     LinearTransition
 } from 'react-native-reanimated';
+import { MarkdownRenderer } from './MarkdownRenderer';
 
 interface MessageItemProps {
     message: Message;
@@ -19,7 +20,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message }) => (
         layout={LinearTransition.damping(14)}
         className={`mb-4 flex ${message.isUser ? 'items-end' : 'items-start'}`}
     >
-        <Animated.Text
+        <Animated.View
             entering={message.isUser
                 ? FadeInRight.damping(12)
                 : FadeIn.duration(500)}
@@ -27,9 +28,8 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message }) => (
                 ? 'bg-zinc-800 rounded-tr-none'
                 : 'bg-zinc-700 rounded-tl-none'
                 } ${message.isStreaming ? 'opacity-70' : ''}`}
-            style={{ color: 'white' }}
         >
-            {message.text}
-        </Animated.Text>
+            <MarkdownRenderer content={message.text} />
+        </Animated.View>
     </Animated.View>
 );

@@ -70,6 +70,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
                             onChangeText={onInputChange}
                             onSubmitEditing={onSubmit}
                             editable={!disabled}
+                            cursorColor="#fff"
                         />
                         <TouchableOpacity
                             onPress={handleSubmitWithAnimation}

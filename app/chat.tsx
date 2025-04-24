@@ -1,24 +1,38 @@
-import ChatInput from '@/components/Home/ChatInput';
 import { MessageItem } from '@/components/Chat/MessageItem';
+import ChatInput from '@/components/Home/ChatInput';
 import { useChat } from '@/hooks/useChat';
 import { useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useRef, useState } from 'react';
 import { FlatList, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Message } from '@/types/chat';
 
 export default function Chat() {
     const { initialMessage } = useLocalSearchParams<{ initialMessage: string }>();
     const [inputText, setInputText] = useState("");
     const flatListRef = useRef<FlatList>(null);
-    
+
     const {
         messages,
         isStreaming,
         simulateStreamingResponse,
         addMessage
-    } = useChat(initialMessage as string);
+    } = useChat(initialMessage || `
+# Welcome to Fluey AI!
+
+This is a test message to demonstrate markdown and math features:
+
+1. **Bold Text** and *Italic Text*
+2. Inline code: \`console.log("Hello")\`
+3. Math equations:
+   - Inline: $E = mc^2$
+   - Block: 
+     $$
+     \\int_{a}^{b} f(x)dx = F(b) - F(a)
+     $$
+
+Try sending a message to see more examples!
+`);
 
     const handleInputChange = useCallback((text: string) => {
         setInputText(text);
