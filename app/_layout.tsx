@@ -4,8 +4,8 @@ import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from "react";
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { KeyboardProvider } from "react-native-keyboard-controller";
 import "../global.css";
+
 export default function RootLayout() {
   const [fontsLoaded, error] = useFonts({
     "SpaceMono-Regular": require("../assets/fonts/SpaceMono-Regular.ttf"),
@@ -19,20 +19,37 @@ export default function RootLayout() {
     }
   }, [fontsLoaded, error]);
 
-
   if (!fontsLoaded && !error) {
     return null;
-  } return (
+  } 
+  
+  return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <KeyboardProvider>
-
-        <StatusBar style="dark" />
-        <Stack
-          screenOptions={{
-            headerShown: false,
+      <StatusBar style="dark" />
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          animation: "fade",
+          animationDuration: 200,
+          presentation: "transparentModal",
+          contentStyle: {
+            backgroundColor: "#18181b", 
+          }
+        }}
+      >
+        <Stack.Screen 
+          name="index" 
+          options={{
+            animation: "fade",
           }}
         />
-      </KeyboardProvider>
+        <Stack.Screen 
+          name="chat" 
+          options={{
+            animation: "fade",
+          }}
+        />
+      </Stack>
     </GestureHandlerRootView>
-  )
+  );
 }
