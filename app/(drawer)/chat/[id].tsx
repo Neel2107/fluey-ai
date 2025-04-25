@@ -4,14 +4,17 @@ import HamburgerMenu from '@/components/Common/HamburgerMenu';
 import ChatInput from '@/components/Home/ChatInput';
 import { useChat } from '@/hooks/useChat';
 import { useChatStore } from '@/store/chatStore';
+import { Message } from '@/types/chat';
+import { getAIResponse } from '@/utils/api';
+import { generateMessageId } from '@/utils/messageUtils';
 import { BottomSheetModal, BottomSheetModalProvider } from '@gorhom/bottom-sheet';
+import { DrawerNavigationProp } from '@react-navigation/drawer';
 import { useLocalSearchParams, useNavigation } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { Menu } from 'lucide-react-native';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { FlatList, Text, TouchableOpacity, View, Alert } from 'react-native';
+import { Alert, FlatList, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Trash2, ArrowLeft, Menu } from 'lucide-react-native';
-import { DrawerNavigationProp } from '@react-navigation/drawer';
 
 export default function Chat() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -20,16 +23,17 @@ export default function Chat() {
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
   const [showApiInfo, setShowApiInfo] = useState(false);
   const navigation = useNavigation<DrawerNavigationProp<any>>();
+  const processingInitialMessage = useRef(false);
 
   // Get chat session from store
-  const { 
-    getSession, 
-    updateSession, 
-    addMessageToSession, 
-    deleteSession 
+  const {
+    getSession,
+    updateSession,
+    addMessageToSession,
+    deleteSession
   } = useChatStore();
-  
-  const session = useChatStore(state => 
+
+  const session = useChatStore(state =>
     state.sessions.find(s => s.id === id)
   );
 
@@ -42,8 +46,97 @@ export default function Chat() {
     lastApiResponse,
     useApiResponse,
     toggleUseApiResponse,
-    clearMessages
+    clearMessages,
+    setIsStreaming,
+    setLastApiResponse
   } = useChat(session?.messages || []);
+
+  // Process initial message if needed
+  useEffect(() => {
+    const processInitialMessage = async () => {
+      // Only process if we have a session with exactly one user message
+      // and we're not already processing
+      if (session &&
+        session.messages.length === 1 &&
+        session.messages[0].isUser &&
+        !processingInitialMessage.current) {
+
+        processingInitialMessage.current = true;
+        console.log('New session with initial message detected - WILL PROCESS');
+
+        try {
+          // Manually trigger the API response
+          console.log('Setting isStreaming to true');
+          setIsStreaming(true);
+
+          // Get the user message
+          const userMessage = session.messages[0].text;
+          console.log('Initial user message to process:', userMessage);
+
+          // Call the API directly - use the imported function
+          console.log('Calling getAIResponse with session messages');
+          const apiResponse = await getAIResponse([{
+            id: session.messages[0].id,
+            text: userMessage,
+            isUser: true,
+            isStreaming: false
+          }]);
+
+          console.log('API response received:', apiResponse ? 'success' : 'null');
+
+          if (apiResponse) {
+            console.log('Creating AI message with response content');
+            // Create a new AI message
+            const aiMessage: Message = {
+              id: generateMessageId(),
+              text: apiResponse.content,
+              isUser: false,
+              isStreaming: false
+            };
+
+            console.log('Updating messages state with AI response');
+            // Add the AI message to the messages state
+            setMessages(prev => {
+              console.log('Previous messages count:', prev.length);
+              return [...prev, aiMessage];
+            });
+
+            console.log('Updating lastApiResponse state');
+            // Update the lastApiResponse state
+            setLastApiResponse(apiResponse);
+
+            console.log('Updating session in store');
+            // Update the session in the store
+            if (id) {
+              const updatedMessages = [...session.messages, aiMessage];
+              console.log('Updating session with messages count:', updatedMessages.length);
+              updateSession(id, updatedMessages);
+            }
+          } else {
+            console.error('API response was null or undefined');
+          }
+        } catch (error) {
+          console.error('Error generating initial response:', error);
+        } finally {
+          console.log('Setting isStreaming to false');
+          setIsStreaming(false);
+        }
+      } else {
+        if (processingInitialMessage.current) {
+          console.log('Initial message already processed, skipping');
+        } else if (!session) {
+          console.log('No session available, skipping initial message processing');
+        } else if (session.messages.length !== 1) {
+          console.log('Session has', session.messages.length, 'messages, not processing initial message');
+        } else if (!session.messages[0].isUser) {
+          console.log('First message is not from user, skipping initial message processing');
+        }
+      }
+    };
+
+    // Call the async function
+    processInitialMessage();
+  }, [session, id, updateSession, setMessages, setIsStreaming, setLastApiResponse]);
 
   // Sync messages back to the store when they change
   useEffect(() => {
@@ -143,7 +236,7 @@ export default function Chat() {
         <StatusBar style="light" />
         <View className="flex-row justify-between items-center p-4 border-b border-zinc-700 mb-2">
           <View className="flex-row items-center">
-            <TouchableOpacity 
+            <TouchableOpacity
               onPress={openDrawer}
               className="mr-3"
             >

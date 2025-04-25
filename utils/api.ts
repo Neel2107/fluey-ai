@@ -29,16 +29,16 @@ export interface AIResponse {
 const generateFallbackResponse = (messages: Message[]): AIResponse => {
     const lastUserMessage = [...messages].reverse().find(msg => msg.isUser);
     let responseIndex = 0;
-    
+
     // Use the last character of the message as a simple hash to select a response
     if (lastUserMessage && lastUserMessage.text.length > 0) {
         const charCode = lastUserMessage.text.charCodeAt(lastUserMessage.text.length - 1);
         responseIndex = charCode % FALLBACK_RESPONSES.length;
     }
-    
+
     const content = FALLBACK_RESPONSES[responseIndex];
     const messageLength = messages.reduce((sum, msg) => sum + msg.text.length, 0);
-    
+
     return {
         id: `fallback-${Date.now()}`,
         provider: "local-fallback",
@@ -55,9 +55,16 @@ const generateFallbackResponse = (messages: Message[]): AIResponse => {
 export const getAIResponse = async (messages: Message[]): Promise<AIResponse> => {
     try {
         console.log('==== API REQUEST STARTED ====');
-        console.log('Sending request to OpenRouter API with messages:', messages.length);
-        console.log('Last message:', messages.length > 0 ? messages[messages.length-1].text.substring(0, 50) : 'No messages');
-        
+        console.log('Messages to process:', messages.length);
+
+        // Log the first message for debugging
+        if (messages.length > 0) {
+            console.log('First message:', {
+                isUser: messages[0].isUser,
+                text: messages[0].text.substring(0, 50) + (messages[0].text.length > 50 ? '...' : '')
+            });
+        }
+
         // Check if API key is configured
         if (!OPENROUTER_API_KEY) {
             console.log('OpenRouter API key is not configured. Using fallback response mechanism.');
@@ -67,15 +74,24 @@ export const getAIResponse = async (messages: Message[]): Promise<AIResponse> =>
         }
 
         console.log('Preparing API request with key:', OPENROUTER_API_KEY ? '(Key exists)' : '(No key)');
+
+        // Create the messages array for the API request
+        const apiMessages = messages.map(msg => ({
+            role: msg.isUser ? "user" : "assistant",
+            content: msg.text
+        }));
+
+        console.log('API messages prepared:', apiMessages.length);
+
         const requestBody = {
             "model": "featherless/qwerky-72b:free",
-            messages: messages.map(msg => ({
-                role: msg.isUser ? "user" : "assistant",
-                content: msg.text
-            }))
+            messages: apiMessages
         };
+
         console.log('Request body prepared:', JSON.stringify(requestBody).substring(0, 100) + '...');
 
+        // Make the API request
+        console.log('Sending fetch request to OpenRouter API...');
         const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
             method: "POST",
             headers: {
@@ -88,7 +104,7 @@ export const getAIResponse = async (messages: Message[]): Promise<AIResponse> =>
         });
 
         console.log('API response status:', response.status);
-        
+
         if (!response.ok) {
             const errorText = await response.text();
             console.error(`API request failed with status ${response.status}:`, errorText);
@@ -98,26 +114,44 @@ export const getAIResponse = async (messages: Message[]): Promise<AIResponse> =>
             return fallbackResponse;
         }
 
+        // Parse the response JSON
+        console.log('Parsing API response JSON...');
         const data = await response.json();
-        
+
+        // Check if the response has the expected structure
+        if (!data || !data.choices || !data.choices[0] || !data.choices[0].message) {
+            console.error('API response missing expected structure:', JSON.stringify(data).substring(0, 200));
+            const fallbackResponse = generateFallbackResponse(messages);
+            console.log('Generated fallback response due to malformed API response:', fallbackResponse.content.substring(0, 50));
+            return fallbackResponse;
+        }
+
         // Log the full response data for debugging
         console.log('API Response received successfully');
-        console.log('Response ID:', data.id);
-        console.log('Provider:', data.provider);
-        console.log('Model:', data.model);
+        console.log('Response ID:', data.id || 'undefined');
+        console.log('Provider:', data.provider || 'undefined');
+        console.log('Model:', data.model || 'undefined');
         console.log('Content:', data.choices[0].message.content.substring(0, 50) + '...');
-        console.log('Usage:', data.usage);
-        
+
+        // Create a safe usage object if it's missing
+        const usage = data.usage || {
+            prompt_tokens: 0,
+            completion_tokens: 0,
+            total_tokens: 0
+        };
+
+        console.log('Usage:', usage);
+
         // Return structured response data
         const result = {
-            id: data.id,
-            provider: data.provider,
-            model: data.model,
+            id: data.id || `local-${Date.now()}`,
+            provider: data.provider || 'openrouter',
+            model: data.model || 'unknown',
             content: data.choices[0].message.content,
-            usage: data.usage
+            usage: usage
         };
-        
-        console.log('==== API REQUEST COMPLETED ====');
+
+        console.log('==== API REQUEST COMPLETED SUCCESSFULLY ====');
         return result;
     } catch (error) {
         console.error('==== API ERROR ====');

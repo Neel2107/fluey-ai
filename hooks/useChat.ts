@@ -2,7 +2,7 @@ import { Message } from '@/types/chat';
 import { getAIResponse, AIResponse } from '@/utils/api';
 import { generateMessageId } from '@/utils/messageUtils';
 import { loadMessages, saveMessages } from '@/utils/storage';
-import { useCallback, useState, useEffect } from 'react';
+import { useCallback, useState, useEffect, useRef } from 'react';
 
 // Define character type for better type safety
 interface Character {
@@ -35,7 +35,12 @@ const LONG_RESPONSES = [
 ];
 
 export const useChat = (initialMessages: Message[] = []) => {
-    const [messages, setMessages] = useState<Message[]>(initialMessages);
+    // Use a ref to track if the initialMessages have been processed
+    const initialMessagesProcessed = useRef(false);
+    const initialMessagesRef = useRef<Message[]>([]);
+    
+    // Initialize state
+    const [messages, setMessages] = useState<Message[]>([]);
     const [isStreaming, setIsStreaming] = useState(false);
     const [normalIndex, setNormalIndex] = useState(0);
     const [mathIndex, setMathIndex] = useState(0);
@@ -43,23 +48,38 @@ export const useChat = (initialMessages: Message[] = []) => {
     const [lastApiResponse, setLastApiResponse] = useState<AIResponse | null>(null);
     const [useApiResponse, setUseApiResponse] = useState(true);
 
+    // Set messages once on mount or when initialMessages changes significantly
+    useEffect(() => {
+        // Skip if we've already processed these exact messages
+        if (JSON.stringify(initialMessagesRef.current) === JSON.stringify(initialMessages)) {
+            return;
+        }
+        
+        // Update our ref with the new messages
+        initialMessagesRef.current = [...initialMessages];
+        
+        // Set the messages state
+        setMessages(initialMessages);
+        
+        console.log('Updated messages from initialMessages:', initialMessages.length);
+    }, [initialMessages]);
+
     // Load messages from AsyncStorage on initial render if no initialMessages provided
     useEffect(() => {
-        if (initialMessages.length === 0) {
+        if (!initialMessagesProcessed.current && initialMessages.length === 0) {
+            initialMessagesProcessed.current = true;
+            
             const loadSavedMessages = async () => {
                 const savedMessages = await loadMessages();
                 if (savedMessages.length > 0) {
+                    console.log('Loaded saved messages from storage:', savedMessages.length);
                     setMessages(savedMessages);
                 }
             };
             
             loadSavedMessages();
-        } else {
-            // Update messages when initialMessages changes (e.g., when switching chats)
-            console.log('Updating messages from initialMessages:', initialMessages.length);
-            setMessages(initialMessages);
         }
-    }, [initialMessages]);
+    }, [initialMessages.length]);
 
     // Save messages to AsyncStorage whenever they change
     useEffect(() => {
@@ -67,7 +87,7 @@ export const useChat = (initialMessages: Message[] = []) => {
             // Only save to AsyncStorage if we're not using initialMessages (session-based)
             saveMessages(messages);
         }
-    }, [messages, initialMessages]);
+    }, [messages, initialMessages.length]);
 
     const simulateResponse = useCallback(async (userText: string) => {
         setIsStreaming(true);
@@ -140,7 +160,7 @@ export const useChat = (initialMessages: Message[] = []) => {
         );
 
         setIsStreaming(false);
-        
+
         // Return the ID so we can track this message
         return responseId;
     }, [mathIndex, normalIndex, longIndex]);
@@ -155,7 +175,7 @@ export const useChat = (initialMessages: Message[] = []) => {
         };
 
         console.log(`Adding ${isUser ? 'user' : 'AI'} message: ${text.substring(0, 50)}${text.length > 50 ? '...' : ''}`);
-        
+
         // Update messages state with the new message
         setMessages(prev => {
             const updatedMessages = [...prev, newMessage];
@@ -167,13 +187,13 @@ export const useChat = (initialMessages: Message[] = []) => {
         if (isUser) {
             console.log('User message detected, preparing AI response...');
             setIsStreaming(true);
-            
+
             try {
                 // Check if we should use API or simulated response
                 if (useApiResponse) {
                     console.log('Using API response...');
                     const responseId = generateMessageId();
-                    
+
                     // Add initial empty message for API response
                     setMessages(prev => {
                         const messagesWithEmptyResponse = [...prev, {
@@ -184,22 +204,22 @@ export const useChat = (initialMessages: Message[] = []) => {
                         }];
                         return messagesWithEmptyResponse;
                     });
-                    
+
                     // Get current messages including the user message we just added
                     const currentMessages = [...messages, newMessage];
-                    
+
                     // Try to get AI response from API
                     console.log('Calling getAIResponse with messages:', currentMessages.length);
                     const response = await getAIResponse(currentMessages);
-                    
+
                     console.log('Received API response:', response.content.substring(0, 50) + (response.content.length > 50 ? '...' : ''));
-                    
+
                     // Store the full API response
                     setLastApiResponse(response);
-                    
+
                     // Get the content from the response
                     const fullResponse = response.content;
-                    
+
                     // Determine streaming parameters based on content length
                     const isLongResponse = fullResponse.length > 100;
                     const baseDelay = isLongResponse ? 5 : 15;
@@ -268,8 +288,10 @@ export const useChat = (initialMessages: Message[] = []) => {
         messages,
         setMessages,
         isStreaming,
+        setIsStreaming,
         addMessage,
         lastApiResponse,
+        setLastApiResponse,
         useApiResponse,
         toggleUseApiResponse,
         clearMessages
