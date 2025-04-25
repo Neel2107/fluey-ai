@@ -40,10 +40,10 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message }) => {
     const renderContent = () => {
         if (message.isStreaming) {
             return (
-                <View style={{ gap: 8 }}>
-                    <Skeleton width="80%" height={16} />
-                    <Skeleton width="60%" height={16} />
-                    <Skeleton width="40%" height={16} />
+                <View style={{ flexDirection: 'column', gap: 6 }}>
+                    <Skeleton width={160} height={14} />
+                    <Skeleton width={120} height={14} />
+                    <Skeleton width={80} height={14} />
                 </View>
             );
         }
@@ -77,10 +77,13 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message }) => {
                 entering={message.isUser
                     ? FadeInRight.damping(12)
                     : FadeIn.duration(500)}
-                className={`p-3 rounded-2xl max-w-[80%] ${message.isUser
-                        ? 'bg-zinc-800 rounded-tr-none'
-                        : 'bg-zinc-700 rounded-tl-none'
-                    }`}
+                className={`p-3 rounded-2xl ${message.isUser
+                    ? 'bg-zinc-800 rounded-tr-none'
+                    : 'bg-zinc-700 rounded-tl-none'}`}
+                style={{
+                    minWidth: message.isStreaming ? 200 : 'auto',
+                    maxWidth: '80%'
+                }}
             >
                 {renderContent()}
             </Animated.View>
