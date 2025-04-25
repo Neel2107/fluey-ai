@@ -1,4 +1,5 @@
 import { useChatStore } from '@/store/chatStore';
+import { clearMessages } from '@/utils/storage';
 import { format } from 'date-fns';
 import { router } from 'expo-router';
 import { MessageSquare, Plus, Search, Trash2 } from 'lucide-react-native';
@@ -21,11 +22,17 @@ const ChatHistoryDrawer: React.FC<ChatHistoryDrawerProps> = (props) => {
   const handleNewChat = useCallback(() => {
     // Create a new empty session
     const sessionId = createSession();
+    // Clear messages in the new session
+    useChatStore.getState().updateSession(sessionId, []);
+    // Clear any saved messages from AsyncStorage
+    clearMessages();
     // Navigate to the new chat
     router.push(`/chat/${sessionId}`);
     // Close the drawer
     props.navigation.closeDrawer();
-  }, [createSession, props.navigation]);
+    // Clear the search query
+    setSearchQuery('');
+}, [createSession, props.navigation]);
 
   const handleChatSelect = useCallback((sessionId: string) => {
     // Navigate to the selected chat

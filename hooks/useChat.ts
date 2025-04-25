@@ -1,8 +1,8 @@
 import { Message } from '@/types/chat';
-import { getAIResponse, AIResponse } from '@/utils/api';
+import { AIResponse, getAIResponse } from '@/utils/api';
 import { generateMessageId } from '@/utils/messageUtils';
 import { loadMessages, saveMessages } from '@/utils/storage';
-import { useCallback, useState, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 // Define character type for better type safety
 interface Character {
@@ -35,12 +35,12 @@ const LONG_RESPONSES = [
 ];
 
 export const useChat = (initialMessages: Message[] = []) => {
-    // Use a ref to track if the initialMessages have been processed
-    const initialMessagesProcessed = useRef(false);
-    const initialMessagesRef = useRef<Message[]>([]);
-    
+    const isStreamingRef = useRef(false);
+    const currentStreamingIdRef = useRef<string | null>(null);
+    const messagesRef = useRef<Message[]>([]);
+
     // Initialize state
-    const [messages, setMessages] = useState<Message[]>([]);
+    const [messages, setMessages] = useState<Message[]>(initialMessages);
     const [isStreaming, setIsStreaming] = useState(false);
     const [normalIndex, setNormalIndex] = useState(0);
     const [mathIndex, setMathIndex] = useState(0);
@@ -48,35 +48,20 @@ export const useChat = (initialMessages: Message[] = []) => {
     const [lastApiResponse, setLastApiResponse] = useState<AIResponse | null>(null);
     const [useApiResponse, setUseApiResponse] = useState(true);
 
-    // Set messages once on mount or when initialMessages changes significantly
+    // Update messagesRef when messages change
     useEffect(() => {
-        // Skip if we've already processed these exact messages
-        if (JSON.stringify(initialMessagesRef.current) === JSON.stringify(initialMessages)) {
-            return;
-        }
-        
-        // Update our ref with the new messages
-        initialMessagesRef.current = [...initialMessages];
-        
-        // Set the messages state
-        setMessages(initialMessages);
-        
-        console.log('Updated messages from initialMessages:', initialMessages.length);
-    }, [initialMessages]);
+        messagesRef.current = messages;
+    }, [messages]);
 
     // Load messages from AsyncStorage on initial render if no initialMessages provided
     useEffect(() => {
-        if (!initialMessagesProcessed.current && initialMessages.length === 0) {
-            initialMessagesProcessed.current = true;
-            
+        if (initialMessages.length === 0) {
             const loadSavedMessages = async () => {
                 const savedMessages = await loadMessages();
                 if (savedMessages.length > 0) {
-                    console.log('Loaded saved messages from storage:', savedMessages.length);
                     setMessages(savedMessages);
                 }
             };
-            
             loadSavedMessages();
         }
     }, [initialMessages.length]);
@@ -84,26 +69,16 @@ export const useChat = (initialMessages: Message[] = []) => {
     // Save messages to AsyncStorage whenever they change
     useEffect(() => {
         if (messages.length > 0 && initialMessages.length === 0) {
-            // Only save to AsyncStorage if we're not using initialMessages (session-based)
             saveMessages(messages);
         }
     }, [messages, initialMessages.length]);
 
     const simulateResponse = useCallback(async (userText: string) => {
         setIsStreaming(true);
-        const responseId = generateMessageId();
-        const isMathRequest = userText.toLowerCase().trim() === 'math';
-        const isLongRequest = userText.toLowerCase().includes('long');
+        isStreamingRef.current = true;
 
-        // Get appropriate response based on request type
-        let fullResponse: string;
-        if (isMathRequest) {
-            fullResponse = MATH_EXAMPLES[mathIndex];
-        } else if (isLongRequest) {
-            fullResponse = LONG_RESPONSES[longIndex];
-        } else {
-            fullResponse = NORMAL_RESPONSES[normalIndex];
-        }
+        const responseId = generateMessageId();
+        currentStreamingIdRef.current = responseId;
 
         // Add initial empty message
         setMessages(prev => [...prev, {
@@ -113,56 +88,54 @@ export const useChat = (initialMessages: Message[] = []) => {
             isStreaming: true
         }]);
 
-        // Determine streaming parameters based on text length
-        const isShortMessage = fullResponse.length < 50;
-        const baseDelay = isShortMessage ? 40 : isLongRequest ? 5 : 15;
-        const batchSize = isShortMessage ? 1 : isLongRequest ? 15 : 5;
+        const isMathRequest = userText.toLowerCase().trim() === 'math';
+        const isLongRequest = userText.toLowerCase().includes('long');
 
-        // Stream characters with appropriate batch size and delay
-        for (let i = 0; i < fullResponse.length; i += batchSize) {
-            await new Promise(resolve => setTimeout(resolve, baseDelay));
-
-            // Process a batch of characters
-            const endIndex = Math.min(i + batchSize, fullResponse.length);
-            const batchText = fullResponse.substring(i, endIndex);
-
-            // Update message with new batch of text
-            setMessages(prev =>
-                prev.map(msg => {
-                    if (msg.id === responseId) {
-                        const newText = msg.text + batchText;
-                        return {
-                            ...msg,
-                            text: newText
-                        };
-                    }
-                    return msg;
-                })
-            );
-        }
-
-        // Update appropriate index
+        // Get appropriate response based on request type
+        let fullResponse: string;
         if (isMathRequest) {
-            setMathIndex((prev) => (prev + 1) % MATH_EXAMPLES.length);
+            fullResponse = MATH_EXAMPLES[mathIndex];
+            setMathIndex(prev => (prev + 1) % MATH_EXAMPLES.length);
         } else if (isLongRequest) {
-            setLongIndex((prev) => (prev + 1) % LONG_RESPONSES.length);
+            fullResponse = LONG_RESPONSES[longIndex];
+            setLongIndex(prev => (prev + 1) % LONG_RESPONSES.length);
         } else {
-            setNormalIndex((prev) => (prev + 1) % NORMAL_RESPONSES.length);
+            fullResponse = NORMAL_RESPONSES[normalIndex];
+            setNormalIndex(prev => (prev + 1) % NORMAL_RESPONSES.length);
         }
 
-        // Mark message as complete
-        setMessages(prev =>
-            prev.map(msg =>
+        // Stream the response
+        let currentText = '';
+        const isLongResponse = fullResponse.length > 100;
+        const baseDelay = isLongResponse ? 5 : 15;
+        const batchSize = isLongResponse ? 15 : 5;
+
+        for (let i = 0; i < fullResponse.length; i += batchSize) {
+            if (!isStreamingRef.current) break;
+
+            await new Promise(resolve => setTimeout(resolve, baseDelay));
+            const endIndex = Math.min(i + batchSize, fullResponse.length);
+            currentText += fullResponse.substring(i, endIndex);
+
+            setMessages(prev => prev.map(msg =>
+                msg.id === responseId
+                    ? { ...msg, text: currentText }
+                    : msg
+            ));
+        }
+
+        // Final update to mark streaming as complete
+        if (isStreamingRef.current) {
+            setMessages(prev => prev.map(msg =>
                 msg.id === responseId
                     ? { ...msg, isStreaming: false }
                     : msg
-            )
-        );
+            ));
+        }
 
         setIsStreaming(false);
-
-        // Return the ID so we can track this message
-        return responseId;
+        isStreamingRef.current = false;
+        currentStreamingIdRef.current = null;
     }, [mathIndex, normalIndex, longIndex]);
 
     const addMessage = useCallback(async (text: string, isUser: boolean) => {
@@ -174,115 +147,97 @@ export const useChat = (initialMessages: Message[] = []) => {
             isStreaming: false
         };
 
-        console.log(`Adding ${isUser ? 'user' : 'AI'} message: ${text.substring(0, 50)}${text.length > 50 ? '...' : ''}`);
-
         // Update messages state with the new message
-        setMessages(prev => {
-            const updatedMessages = [...prev, newMessage];
-            console.log(`Messages array updated, now contains ${updatedMessages.length} messages`);
-            return updatedMessages;
-        });
+        setMessages(prev => [...prev, newMessage]);
 
         // Get AI response when it's a user message
         if (isUser) {
-            console.log('User message detected, preparing AI response...');
             setIsStreaming(true);
+            isStreamingRef.current = true;
 
             try {
-                // Check if we should use API or simulated response
                 if (useApiResponse) {
-                    console.log('Using API response...');
                     const responseId = generateMessageId();
+                    currentStreamingIdRef.current = responseId;
 
                     // Add initial empty message for API response
-                    setMessages(prev => {
-                        const messagesWithEmptyResponse = [...prev, {
-                            id: responseId,
-                            text: '',
-                            isUser: false,
-                            isStreaming: true
-                        }];
-                        return messagesWithEmptyResponse;
-                    });
+                    setMessages(prev => [...prev, {
+                        id: responseId,
+                        text: '',
+                        isUser: false,
+                        isStreaming: true
+                    }]);
 
                     // Get current messages including the user message we just added
-                    const currentMessages = [...messages, newMessage];
-
-                    // Try to get AI response from API
-                    console.log('Calling getAIResponse with messages:', currentMessages.length);
+                    const currentMessages = [...messagesRef.current, newMessage];
                     const response = await getAIResponse(currentMessages);
-
-                    console.log('Received API response:', response.content.substring(0, 50) + (response.content.length > 50 ? '...' : ''));
-
-                    // Store the full API response
                     setLastApiResponse(response);
 
-                    // Get the content from the response
                     const fullResponse = response.content;
-
-                    // Determine streaming parameters based on content length
                     const isLongResponse = fullResponse.length > 100;
                     const baseDelay = isLongResponse ? 5 : 15;
                     const batchSize = isLongResponse ? 15 : 5;
 
-                    console.log(`Streaming response with baseDelay=${baseDelay}, batchSize=${batchSize}`);
-                    // Stream characters with appropriate batch size and delay
+                    let currentText = '';
                     for (let i = 0; i < fullResponse.length; i += batchSize) {
+                        if (!isStreamingRef.current) break;
+
                         await new Promise(resolve => setTimeout(resolve, baseDelay));
-
-                        // Process a batch of characters
                         const endIndex = Math.min(i + batchSize, fullResponse.length);
-                        const batchText = fullResponse.substring(i, endIndex);
+                        currentText += fullResponse.substring(i, endIndex);
 
-                        // Update message with new batch of text
-                        setMessages(prev =>
-                            prev.map(msg => {
-                                if (msg.id === responseId) {
-                                    const newText = msg.text + batchText;
-                                    return {
-                                        ...msg,
-                                        text: newText
-                                    };
-                                }
-                                return msg;
-                            })
-                        );
+                        setMessages(prev => prev.map(msg =>
+                            msg.id === responseId
+                                ? { ...msg, text: currentText }
+                                : msg
+                        ));
                     }
 
-                    // Mark message as complete
-                    setMessages(prev =>
-                        prev.map(msg =>
+                    // Final update to mark streaming as complete
+                    if (isStreamingRef.current) {
+                        setMessages(prev => prev.map(msg =>
                             msg.id === responseId
                                 ? { ...msg, isStreaming: false }
                                 : msg
-                        )
-                    );
+                        ));
+                    }
                 } else {
-                    // Use simulated response directly without creating an empty message first
                     await simulateResponse(text);
                 }
             } catch (error) {
-                console.log('Falling back to simulated response');
-                // If API fails, use simulated response
-                await simulateResponse(text);
+                console.error('Error getting AI response:', error);
+                // Add error message
+                setMessages(prev => [...prev, {
+                    id: generateMessageId(),
+                    text: "I'm sorry, I encountered an error. Please try again.",
+                    isUser: false,
+                    isStreaming: false
+                }]);
+            } finally {
+                setIsStreaming(false);
+                isStreamingRef.current = false;
+                currentStreamingIdRef.current = null;
             }
-
-            setIsStreaming(false);
         }
-    }, [messages, simulateResponse, useApiResponse]);
+    }, [useApiResponse, simulateResponse]);
 
     const toggleUseApiResponse = useCallback(() => {
         setUseApiResponse(prev => !prev);
     }, []);
 
-    // Clear all messages from state and storage
     const clearMessages = useCallback(async () => {
         setMessages([]);
         if (initialMessages.length === 0) {
-            // Only clear AsyncStorage if we're not using initialMessages (session-based)
             await saveMessages([]);
         }
-    }, [initialMessages]);
+    }, [initialMessages.length]);
+
+    // Cleanup function to stop streaming when component unmounts
+    useEffect(() => {
+        return () => {
+            isStreamingRef.current = false;
+        };
+    }, []);
 
     return {
         messages,
