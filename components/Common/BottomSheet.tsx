@@ -7,6 +7,7 @@ import {
 } from 'react-native';
 import { BottomSheetModal, BottomSheetBackdrop, BottomSheetView } from '@gorhom/bottom-sheet';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import CustomSwitch from './CustomSwitch';
 
 interface CustomBottomSheetProps {
   bottomSheetModalRef: React.RefObject<BottomSheetModal>;
@@ -66,21 +67,17 @@ const CustomBottomSheet: React.FC<CustomBottomSheetProps> = ({
         
         <View style={styles.option}>
           <Text style={styles.optionText}>Show API Info</Text>
-          <Switch
+          <CustomSwitch
             value={showApiInfo}
             onValueChange={toggleApiInfo}
-            trackColor={{ false: '#3e3e3e', true: '#007AFF' }}
-            thumbColor="#f4f3f4"
           />
         </View>
         
         <View style={styles.option}>
           <Text style={styles.optionText}>Use API Response</Text>
-          <Switch
+          <CustomSwitch
             value={useApiResponse}
             onValueChange={toggleUseApiResponse}
-            trackColor={{ false: '#3e3e3e', true: '#007AFF' }}
-            thumbColor="#f4f3f4"
           />
         </View>
         

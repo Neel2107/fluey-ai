@@ -3,12 +3,13 @@ import CustomBottomSheet from '@/components/Common/BottomSheet';
 import HamburgerMenu from '@/components/Common/HamburgerMenu';
 import ChatInput from '@/components/Home/ChatInput';
 import { useChat } from '@/hooks/useChat';
-import { router, useLocalSearchParams } from 'expo-router';
+import { BottomSheetModal, BottomSheetModalProvider } from '@gorhom/bottom-sheet';
+import { useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { FlatList, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { BottomSheetModal, BottomSheetModalProvider } from '@gorhom/bottom-sheet';
+
 
 export default function Chat() {
     const { initialMessage } = useLocalSearchParams<{ initialMessage: string }>();
@@ -72,15 +73,6 @@ export default function Chat() {
                     </TouchableOpacity>
                 </View>
 
-                {showApiInfo && lastApiResponse && (
-                    <View className="mx-4 mb-2 p-3 bg-zinc-800 rounded-lg">
-                        <Text className="text-white text-xs mb-1">Model: {lastApiResponse.model}</Text>
-                        <Text className="text-white text-xs mb-1">Provider: {lastApiResponse.provider}</Text>
-                        <Text className="text-white text-xs">
-                            Tokens: {lastApiResponse.usage.prompt_tokens} prompt / {lastApiResponse.usage.completion_tokens} completion
-                        </Text>
-                    </View>
-                )}
 
                 <View className="flex-1">
                     <FlatList
@@ -92,6 +84,8 @@ export default function Chat() {
                         )}
                         onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
                         className="flex-1 px-4"
+                    // style={{ flex: 1, paddingHorizontal: 16 }}
+
                     />
                     <ChatInput
                         inputText={inputText}
