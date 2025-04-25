@@ -25,7 +25,7 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <StatusBar style="dark" />
+      <StatusBar style="light" backgroundColor="#18181b" />
       <Stack
         screenOptions={{
           headerShown: false,
@@ -36,7 +36,7 @@ export default function RootLayout() {
             backgroundColor: "#18181b",
           }, 
           navigationBarColor: "#18181b",
-          statusBarStyle: "dark",
+          statusBarStyle: "light",
         }}
       >
         <Stack.Screen

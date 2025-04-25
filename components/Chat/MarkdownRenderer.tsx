@@ -13,6 +13,20 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) =
     const markdownStyles = StyleSheet.create({
         body: {
             color: colors.text,
+            margin: 0,
+            padding: 0,
+        },
+        paragraph: {
+            margin: 0,
+            padding: 0,
+        },
+        list: {
+            margin: 0,
+            padding: 0,
+        },
+        list_item: {
+            margin: 0,
+            padding: 0,
         },
         code_inline: {
             backgroundColor: colors.codeBackground,
