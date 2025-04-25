@@ -5,10 +5,10 @@ import MathView from 'react-native-math-view';
 import Animated, {
     FadeIn,
     FadeInRight,
-    LinearTransition
+    LinearTransition,
+    FadeInUp
 } from 'react-native-reanimated';
 import { MarkdownRenderer } from './MarkdownRenderer';
-import { Skeleton } from '../Common/Skeleton';
 
 const containsMarkdown = (text: string): boolean => {
     // Check for common Markdown patterns
@@ -22,7 +22,7 @@ const containsMarkdown = (text: string): boolean => {
         /\|.*\|/, // Tables
         /^\s*>/, // Blockquotes
         /\$.*?\$/, // Inline math
-        /\$\$.*?\$\$/, // Block math
+        /\$\$.*?\$\$$/, // Block math
     ];
 
     return markdownPatterns.some(pattern => pattern.test(text));
@@ -38,16 +38,35 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message }) => {
         /^\$\$.*?\$\$$/.test(message.text.trim());
 
     const renderContent = () => {
-        if (message.isStreaming) {
+        // If streaming and we have characters, render them with animation
+        if (message.isStreaming && message.characters && message.characters.length > 0) {
+            // For math expressions, we need to render the whole expression
+            if (isMathExpression) {
+                return (
+                    <MathView
+                        math={message.text.replace(/^\$|\$$/g, '')}
+                        style={{ backgroundColor: 'transparent' }}
+                    />
+                );
+            }
+            
+            // For other content, show animated characters
             return (
-                <View style={{ flexDirection: 'column', gap: 6 }}>
-                    <Skeleton width={160} height={14} />
-                    <Skeleton width={120} height={14} />
-                    <Skeleton width={80} height={14} />
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+                    {message.characters.map((char) => (
+                        <Animated.Text
+                            key={char.id}
+                            entering={FadeIn.duration(200)}
+                            className="text-white"
+                        >
+                            {char.text}
+                        </Animated.Text>
+                    ))}
                 </View>
             );
         }
 
+        // For completed math expressions
         if (isMathExpression) {
             return (
                 <MathView
@@ -57,10 +76,12 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message }) => {
             );
         }
 
+        // For completed markdown
         if (containsMarkdown(message.text)) {
             return <MarkdownRenderer content={message.text} />;
         }
 
+        // For completed plain text
         return <Text className="text-white">{message.text}</Text>;
     };
 
@@ -70,7 +91,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message }) => {
             entering={message.isUser
                 ? FadeInRight.damping(12)
                 : FadeIn.duration(300)}
-            layout={LinearTransition.damping(14)}
+            layout={LinearTransition.springify().damping(14)}
             className={`mb-4 flex ${message.isUser ? 'items-end' : 'items-start'}`}
         >
             <Animated.View
@@ -81,8 +102,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message }) => {
                     ? 'bg-zinc-800 rounded-tr-none'
                     : 'bg-zinc-700 rounded-tl-none'}`}
                 style={{
-                    minWidth: message.isStreaming ? 200 : 'auto',
-                    maxWidth: '80%'
+                    maxWidth: '80%',
                 }}
             >
                 {renderContent()}

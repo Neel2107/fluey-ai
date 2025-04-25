@@ -1,5 +1,4 @@
 import { Message } from '@/types/chat';
-import { MARKDOWN_EXAMPLES } from '@/utils/markdownExamples';
 import { generateMessageId } from '@/utils/messageUtils';
 import { useCallback, useState } from 'react';
 
@@ -31,43 +30,44 @@ export const useChat = (initialMessage?: string) => {
         setIsStreaming(true);
         const responseId = generateMessageId();
         const isMathRequest = userText.toLowerCase().trim() === 'math';
-        
+
         // Get appropriate response
-        const fullResponse = isMathRequest 
+        const fullResponse = isMathRequest
             ? MATH_EXAMPLES[mathIndex]
             : NORMAL_RESPONSES[normalIndex];
 
-        // Add initial empty message
+        // Add initial empty message with empty characters array
         setMessages(prev => [...prev, {
             id: responseId,
             text: '',
             isUser: false,
-            isStreaming: true
+            isStreaming: true,
+            characters: []
         }]);
 
-        // Stream each character with a delay
-        let streamedText = '';
+        // Stream each character with a small delay
         for (let i = 0; i < fullResponse.length; i++) {
             await new Promise(resolve => setTimeout(resolve, 30));
-            streamedText += fullResponse[i];
             
+            // Add new character to the characters array
             setMessages(prev => 
-                prev.map(msg => 
-                    msg.id === responseId
-                        ? { ...msg, text: streamedText }
-                        : msg
-                )
+                prev.map(msg => {
+                    if (msg.id === responseId) {
+                        const updatedChars = [...(msg.characters || []), { 
+                            text: fullResponse[i], 
+                            id: i 
+                        }];
+                        
+                        return {
+                            ...msg,
+                            characters: updatedChars,
+                            text: updatedChars.map(c => c.text).join('')
+                        };
+                    }
+                    return msg;
+                })
             );
         }
-
-        // Mark message as complete
-        setMessages(prev =>
-            prev.map(msg =>
-                msg.id === responseId
-                    ? { ...msg, isStreaming: false }
-                    : msg
-            )
-        );
 
         // Update appropriate index
         if (isMathRequest) {
@@ -75,6 +75,16 @@ export const useChat = (initialMessage?: string) => {
         } else {
             setNormalIndex((prev) => (prev + 1) % NORMAL_RESPONSES.length);
         }
+
+        // Mark message as complete after a small delay
+        await new Promise(resolve => setTimeout(resolve, 100));
+        setMessages(prev =>
+            prev.map(msg =>
+                msg.id === responseId
+                    ? { ...msg, isStreaming: false }
+                    : msg
+            )
+        );
 
         setIsStreaming(false);
     }, [mathIndex, normalIndex]);
