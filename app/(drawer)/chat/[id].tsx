@@ -134,9 +134,10 @@ export default function Chat() {
       }
     };
 
-    // Call the async function
-    processInitialMessage();
-  }, [session, id, updateSession, setMessages, setIsStreaming, setLastApiResponse]);
+    if (session && session.messages.length === 1 && session.messages[0].isUser) {
+      processInitialMessage();
+    }
+  }, [session?.messages]); 
 
   // Sync messages back to the store when they change
   useEffect(() => {

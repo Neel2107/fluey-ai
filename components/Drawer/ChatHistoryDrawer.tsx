@@ -1,18 +1,22 @@
 import { useChatStore } from '@/store/chatStore';
-import { DrawerContentScrollView } from '@react-navigation/drawer';
-import { router } from 'expo-router';
-import { Plus, MessageSquare, Trash2 } from 'lucide-react-native';
-import React, { useCallback } from 'react';
-import { View, Text, TouchableOpacity, Alert } from 'react-native';
 import { format } from 'date-fns';
+import { router } from 'expo-router';
+import { MessageSquare, Plus, Search, Trash2 } from 'lucide-react-native';
+import React, { useCallback, useState } from 'react';
+import { Alert, FlatList, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 interface ChatHistoryDrawerProps {
-  // Props from drawer navigation
   [key: string]: any;
 }
 
 const ChatHistoryDrawer: React.FC<ChatHistoryDrawerProps> = (props) => {
   const { sessions, createSession, deleteSession } = useChatStore();
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredSessions = sessions.filter(session =>
+    session.title.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const handleNewChat = useCallback(() => {
     // Create a new empty session
@@ -54,62 +58,76 @@ const ChatHistoryDrawer: React.FC<ChatHistoryDrawerProps> = (props) => {
   };
 
   return (
-    <DrawerContentScrollView
-      {...props}
-      className="flex-1 px-4"
-    >
-      <View className="mb-6 py-2">
-        <Text className="text-2xl font-bold text-white">Fluey AI</Text>
+    <SafeAreaView className="flex-1">
+      <View className="px-4">
+        <View className="mb-6 mt-10 py-2">
+          <Text className="text-2xl font-bold text-white">Fluey AI</Text>
+        </View>
+
+        <View className="flex-row items-center gap-2 mb-4">
+          <View className="flex-1 flex-row items-center bg-zinc-800 py-3 px-4 gap-2 rounded-lg">
+            <Search size={18} color="#a1a1aa" className="mr-2" />
+            <TextInput
+              placeholder="Search chat history"
+              placeholderTextColor="#a1a1aa"
+              className="flex-1 text-white text-base"
+              cursorColor={'#fff'}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+            />
+          </View>
+          <TouchableOpacity
+            className="bg-zinc-800 p-3 rounded-lg"
+            onPress={handleNewChat}
+            activeOpacity={0.7}
+          >
+            <Plus size={20} color="#fff" />
+          </TouchableOpacity>
+        </View>
+
+        <View className="h-[1px] bg-zinc-800 mb-4" />
+
+        <Text className="text-base font-medium text-zinc-400 mb-3">Chat History</Text>
       </View>
 
-      <TouchableOpacity
-        className="flex-row items-center bg-blue-500 py-3 px-4 rounded-lg mb-4"
-        onPress={handleNewChat}
-        activeOpacity={0.7}
-      >
-        <Plus size={20} color="#fff" />
-        <Text className="text-white text-base font-medium ml-2">New Chat</Text>
-      </TouchableOpacity>
-
-      <View className="h-[1px] bg-zinc-800 mb-4" />
-
-      <Text className="text-base font-medium text-zinc-400 mb-3">Chat History</Text>
-
-      {sessions.length === 0 ? (
+      {filteredSessions.length === 0 ? (
         <View className="items-center justify-center py-6">
           <MessageSquare size={24} color="#a1a1aa" />
-          <Text className="text-zinc-400 mt-2">No chat history yet</Text>
+          <Text className="text-zinc-400 mt-2">No matching chats found</Text>
         </View>
       ) : (
-        <View className="mb-4">
-          {sessions.map(session => (
-            <View key={session.id} className="flex-row items-center mb-2">
+        <FlatList
+          data={filteredSessions}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={{ paddingHorizontal: 16 }}
+          renderItem={({ item }) => (
+            <View className="flex-row items-center mb-2">
               <TouchableOpacity
                 className="flex-1 py-3 px-3 bg-zinc-800 rounded-lg"
-                onPress={() => handleChatSelect(session.id)}
+                onPress={() => handleChatSelect(item.id)}
                 activeOpacity={0.7}
               >
                 <View className="flex-1">
                   <Text className="text-white text-sm font-medium mb-1" numberOfLines={1} ellipsizeMode="tail">
-                    {session.title}
+                    {item.title}
                   </Text>
                   <Text className="text-zinc-400 text-xs">
-                    {formatDate(session.updatedAt)}
+                    {formatDate(item.updatedAt)}
                   </Text>
                 </View>
               </TouchableOpacity>
               <TouchableOpacity
                 className="p-2 ml-2"
-                onPress={() => handleDeleteChat(session.id, session.title)}
+                onPress={() => handleDeleteChat(item.id, item.title)}
                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               >
                 <Trash2 size={16} color="#a1a1aa" />
               </TouchableOpacity>
             </View>
-          ))}
-        </View>
+          )}
+        />
       )}
-    </DrawerContentScrollView>
+    </SafeAreaView>
   );
 };
 
