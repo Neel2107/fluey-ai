@@ -12,11 +12,13 @@ export default function Chat() {
     const [inputText, setInputText] = useState("");
     const flatListRef = useRef<FlatList>(null);
     const initialMessageProcessed = useRef(false);
+    const [showApiInfo, setShowApiInfo] = useState(false);
 
     const {
         messages,
         isStreaming,
-        addMessage
+        addMessage,
+        lastApiResponse
     } = useChat();
 
     // Process initial message and trigger AI response
@@ -41,14 +43,40 @@ export default function Chat() {
         }
     }, [inputText, isStreaming, addMessage]);
 
+    const toggleApiInfo = useCallback(() => {
+        setShowApiInfo(prev => !prev);
+    }, []);
+
     return (
         <SafeAreaView className="flex-1 bg-zinc-900">
             <StatusBar style="light" />
-            <View className="flex-row justify-center items-center p-4 border-b border-zinc-700 mb-2">
+            <View className="flex-row justify-between items-center p-4 border-b border-zinc-700 mb-2">
                 <TouchableOpacity className="bg-zinc-700 px-4 py-2 rounded-full flex-row items-center">
                     <Text className="text-white mr-1">Fluey AI</Text>
                 </TouchableOpacity>
+                
+                {lastApiResponse && (
+                    <TouchableOpacity 
+                        onPress={toggleApiInfo}
+                        className="bg-zinc-800 px-3 py-1 rounded-lg"
+                    >
+                        <Text className="text-white text-xs">
+                            {showApiInfo ? "Hide API Info" : "Show API Info"}
+                        </Text>
+                    </TouchableOpacity>
+                )}
             </View>
+            
+            {showApiInfo && lastApiResponse && (
+                <View className="mx-4 mb-2 p-3 bg-zinc-800 rounded-lg">
+                    <Text className="text-white text-xs mb-1">Model: {lastApiResponse.model}</Text>
+                    <Text className="text-white text-xs mb-1">Provider: {lastApiResponse.provider}</Text>
+                    <Text className="text-white text-xs">
+                        Tokens: {lastApiResponse.usage.prompt_tokens} prompt / {lastApiResponse.usage.completion_tokens} completion
+                    </Text>
+                </View>
+            )}
+            
             <View className="flex-1">
                 <FlatList
                     ref={flatListRef}

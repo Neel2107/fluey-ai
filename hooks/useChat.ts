@@ -1,4 +1,5 @@
 import { Message } from '@/types/chat';
+import { getAIResponse, AIResponse } from '@/utils/api';
 import { generateMessageId } from '@/utils/messageUtils';
 import { useCallback, useState } from 'react';
 
@@ -38,6 +39,7 @@ export const useChat = () => {
     const [normalIndex, setNormalIndex] = useState(0);
     const [mathIndex, setMathIndex] = useState(0);
     const [longIndex, setLongIndex] = useState(0);
+    const [lastApiResponse, setLastApiResponse] = useState<AIResponse | null>(null);
 
     const simulateResponse = useCallback(async (userText: string) => {
         setIsStreaming(true);
@@ -114,22 +116,90 @@ export const useChat = () => {
 
     const addMessage = useCallback(async (text: string, isUser: boolean) => {
         // Add user message
-        setMessages(prev => [...prev, {
+        const newMessage: Message = {
             id: generateMessageId(),
             text: text.trim(),
             isUser,
             isStreaming: false
-        }]);
+        };
 
-        // Simulate AI response when it's a user message
+        setMessages(prev => [...prev, newMessage]);
+
+        // Get AI response when it's a user message
         if (isUser) {
-            await simulateResponse(text);
+            setIsStreaming(true);
+            const responseId = generateMessageId();
+
+            // Add initial empty message
+            setMessages(prev => [...prev, {
+                id: responseId,
+                text: '',
+                isUser: false,
+                isStreaming: true
+            }]);
+
+            try {
+                // Try to get AI response from API
+                const response = await getAIResponse([...messages, newMessage]);
+                
+                // Store the full API response
+                setLastApiResponse(response);
+                
+                // Get the content from the response
+                const fullResponse = response.content;
+                
+                // Determine streaming parameters based on content length
+                const isLongResponse = fullResponse.length > 100;
+                const baseDelay = isLongResponse ? 5 : 15;
+                const batchSize = isLongResponse ? 15 : 5;
+
+                // Stream characters with appropriate batch size and delay
+                for (let i = 0; i < fullResponse.length; i += batchSize) {
+                    await new Promise(resolve => setTimeout(resolve, baseDelay));
+                    
+                    // Process a batch of characters
+                    const endIndex = Math.min(i + batchSize, fullResponse.length);
+                    const batchText = fullResponse.substring(i, endIndex);
+                    
+                    // Update message with new batch of text
+                    setMessages(prev =>
+                        prev.map(msg => {
+                            if (msg.id === responseId) {
+                                const newText = msg.text + batchText;
+                                return {
+                                    ...msg,
+                                    text: newText
+                                };
+                            }
+                            return msg;
+                        })
+                    );
+                }
+                
+                // Mark message as complete
+                setMessages(prev =>
+                    prev.map(msg =>
+                        msg.id === responseId
+                            ? { ...msg, isStreaming: false }
+                            : msg
+                    )
+                );
+            } catch (error) {
+                console.log('Falling back to simulated response');
+                // If API fails, use simulated response
+                await simulateResponse(text);
+                // Remove the empty message we added
+                setMessages(prev => prev.filter(msg => msg.id !== responseId));
+            }
+
+            setIsStreaming(false);
         }
-    }, [simulateResponse]);
+    }, [messages, simulateResponse]);
 
     return {
         messages,
         isStreaming,
         addMessage,
+        lastApiResponse
     };
 };
