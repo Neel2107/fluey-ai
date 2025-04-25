@@ -1,7 +1,8 @@
 import { Message } from '@/types/chat';
 import { getAIResponse, AIResponse } from '@/utils/api';
 import { generateMessageId } from '@/utils/messageUtils';
-import { useCallback, useState } from 'react';
+import { loadMessages, saveMessages } from '@/utils/storage';
+import { useCallback, useState, useEffect } from 'react';
 
 // Define character type for better type safety
 interface Character {
@@ -33,14 +34,36 @@ const LONG_RESPONSES = [
     "The history of computing spans centuries, from mechanical calculators to modern quantum computers. Charles Babbage's Analytical Engine in the 19th century laid the theoretical groundwork for programmable computers. The mid-20th century saw the development of ENIAC, one of the first general-purpose electronic computers. The invention of the transistor in 1947 led to smaller, more reliable computers."
 ];
 
-export const useChat = () => {
-    const [messages, setMessages] = useState<Message[]>([]);
+export const useChat = (initialMessages: Message[] = []) => {
+    const [messages, setMessages] = useState<Message[]>(initialMessages);
     const [isStreaming, setIsStreaming] = useState(false);
     const [normalIndex, setNormalIndex] = useState(0);
     const [mathIndex, setMathIndex] = useState(0);
     const [longIndex, setLongIndex] = useState(0);
     const [lastApiResponse, setLastApiResponse] = useState<AIResponse | null>(null);
     const [useApiResponse, setUseApiResponse] = useState(true);
+
+    // Load messages from AsyncStorage on initial render if no initialMessages provided
+    useEffect(() => {
+        if (initialMessages.length === 0) {
+            const loadSavedMessages = async () => {
+                const savedMessages = await loadMessages();
+                if (savedMessages.length > 0) {
+                    setMessages(savedMessages);
+                }
+            };
+            
+            loadSavedMessages();
+        }
+    }, [initialMessages]);
+
+    // Save messages to AsyncStorage whenever they change
+    useEffect(() => {
+        if (messages.length > 0 && initialMessages.length === 0) {
+            // Only save to AsyncStorage if we're not using initialMessages (session-based)
+            saveMessages(messages);
+        }
+    }, [messages, initialMessages]);
 
     const simulateResponse = useCallback(async (userText: string) => {
         setIsStreaming(true);
@@ -127,27 +150,45 @@ export const useChat = () => {
             isStreaming: false
         };
 
-        setMessages(prev => [...prev, newMessage]);
+        console.log(`Adding ${isUser ? 'user' : 'AI'} message: ${text.substring(0, 50)}${text.length > 50 ? '...' : ''}`);
+        
+        // Update messages state with the new message
+        setMessages(prev => {
+            const updatedMessages = [...prev, newMessage];
+            console.log(`Messages array updated, now contains ${updatedMessages.length} messages`);
+            return updatedMessages;
+        });
 
         // Get AI response when it's a user message
         if (isUser) {
+            console.log('User message detected, preparing AI response...');
             setIsStreaming(true);
             
             try {
                 // Check if we should use API or simulated response
                 if (useApiResponse) {
+                    console.log('Using API response...');
                     const responseId = generateMessageId();
                     
                     // Add initial empty message for API response
-                    setMessages(prev => [...prev, {
-                        id: responseId,
-                        text: '',
-                        isUser: false,
-                        isStreaming: true
-                    }]);
+                    setMessages(prev => {
+                        const messagesWithEmptyResponse = [...prev, {
+                            id: responseId,
+                            text: '',
+                            isUser: false,
+                            isStreaming: true
+                        }];
+                        return messagesWithEmptyResponse;
+                    });
+                    
+                    // Get current messages including the user message we just added
+                    const currentMessages = [...messages, newMessage];
                     
                     // Try to get AI response from API
-                    const response = await getAIResponse([...messages, newMessage]);
+                    console.log('Calling getAIResponse with messages:', currentMessages.length);
+                    const response = await getAIResponse(currentMessages);
+                    
+                    console.log('Received API response:', response.content.substring(0, 50) + (response.content.length > 50 ? '...' : ''));
                     
                     // Store the full API response
                     setLastApiResponse(response);
@@ -160,14 +201,15 @@ export const useChat = () => {
                     const baseDelay = isLongResponse ? 5 : 15;
                     const batchSize = isLongResponse ? 15 : 5;
 
+                    console.log(`Streaming response with baseDelay=${baseDelay}, batchSize=${batchSize}`);
                     // Stream characters with appropriate batch size and delay
                     for (let i = 0; i < fullResponse.length; i += batchSize) {
                         await new Promise(resolve => setTimeout(resolve, baseDelay));
-                        
+
                         // Process a batch of characters
                         const endIndex = Math.min(i + batchSize, fullResponse.length);
                         const batchText = fullResponse.substring(i, endIndex);
-                        
+
                         // Update message with new batch of text
                         setMessages(prev =>
                             prev.map(msg => {
@@ -182,7 +224,7 @@ export const useChat = () => {
                             })
                         );
                     }
-                    
+
                     // Mark message as complete
                     setMessages(prev =>
                         prev.map(msg =>
@@ -209,12 +251,23 @@ export const useChat = () => {
         setUseApiResponse(prev => !prev);
     }, []);
 
+    // Clear all messages from state and storage
+    const clearMessages = useCallback(async () => {
+        setMessages([]);
+        if (initialMessages.length === 0) {
+            // Only clear AsyncStorage if we're not using initialMessages (session-based)
+            await saveMessages([]);
+        }
+    }, [initialMessages]);
+
     return {
         messages,
+        setMessages,
         isStreaming,
         addMessage,
         lastApiResponse,
         useApiResponse,
-        toggleUseApiResponse
+        toggleUseApiResponse,
+        clearMessages
     };
 };

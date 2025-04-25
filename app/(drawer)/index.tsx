@@ -1,5 +1,7 @@
 import SuggestionChip from "@/components/Common/SuggestionChip";
 import ChatInput from "@/components/Home/ChatInput";
+import { useChatStore } from "@/store/chatStore";
+import { router, useNavigation } from 'expo-router';
 import {
   BarChart3,
   FileText,
@@ -17,13 +19,14 @@ import {
   View
 } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
-
 import { SafeAreaView } from "react-native-safe-area-context";
-import { router } from 'expo-router';
 import { StatusBar } from "expo-status-bar";
+import { DrawerNavigationProp } from '@react-navigation/drawer';
 
 export default function Index() {
   const [inputText, setInputText] = useState("");
+  const createSession = useChatStore(state => state.createSession);
+  const navigation = useNavigation<DrawerNavigationProp<any>>();
 
   const handleInputChange = (text: string) => {
     setInputText(text);
@@ -31,19 +34,28 @@ export default function Index() {
 
   const handleSubmit = () => {
     if (inputText.trim()) {
+      // Create a new chat session with the initial message
+      const sessionId = createSession(inputText.trim());
+      
+      // Navigate to the chat screen with the session ID
       router.push({
-          pathname: "/chat",
-          params: { initialMessage: inputText }
+        pathname: "/(drawer)/chat/[id]",
+        params: { id: sessionId }
       });
+      
       setInputText("");
     }
   };
 
+  const openDrawer = () => {
+    navigation.openDrawer();
+  };
+
   return (
     <SafeAreaView className="flex-1 bg-zinc-900">
-      <StatusBar style='dark' />
+      <StatusBar style='light' />
       <View className="flex-row justify-between items-center p-4 border-b border-zinc-700">
-        <TouchableOpacity>
+        <TouchableOpacity onPress={openDrawer}>
           <Menu color="white" size={24} />
         </TouchableOpacity>
         <TouchableOpacity className="bg-zinc-700 px-4 py-2 rounded-full flex-row items-center">
@@ -54,7 +66,6 @@ export default function Index() {
           <UserCircle color="white" size={24} />
         </TouchableOpacity>
       </View>
-
 
       <ScrollView
         className="flex-1 px-4 pt-8"

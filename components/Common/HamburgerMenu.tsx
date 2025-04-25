@@ -1,3 +1,4 @@
+import { EllipsisVertical } from 'lucide-react-native';
 import React from 'react';
 import { TouchableOpacity, StyleSheet, View } from 'react-native';
 
@@ -12,24 +13,10 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
   color = 'white', 
   size = 24 
 }) => {
-  const barHeight = Math.max(2, size / 8);
-  const barWidth = size;
-  const barSpacing = Math.max(4, size / 6);
   
   return (
     <TouchableOpacity style={styles.container} onPress={onPress}>
-      <View style={[
-        styles.bar, 
-        { backgroundColor: color, width: barWidth, height: barHeight, marginBottom: barSpacing }
-      ]} />
-      <View style={[
-        styles.bar, 
-        { backgroundColor: color, width: barWidth, height: barHeight, marginBottom: barSpacing }
-      ]} />
-      <View style={[
-        styles.bar, 
-        { backgroundColor: color, width: barWidth, height: barHeight }
-      ]} />
+     <EllipsisVertical color={color} size={size}/>
     </TouchableOpacity>
   );
 };
@@ -40,9 +27,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  bar: {
-    borderRadius: 1,
-  }
 });
 
 export default HamburgerMenu;

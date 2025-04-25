@@ -1,5 +1,4 @@
 import {
-    Mic,
     Plus,
     Send
 } from "lucide-react-native";
@@ -40,14 +39,15 @@ const ChatInput: React.FC<ChatInputProps> = ({
                         <TouchableOpacity
                             onPress={onSubmit}
                             className="p-1"
-                            disabled={disabled}
+                            disabled={disabled || !inputText.trim()}
                         >
-                            <Mic color="white" size={20} />
+                            <Send color="white" size={20} />
                         </TouchableOpacity>
                     </View>
                     <TouchableOpacity
                         onPress={onSubmit}
-                        className="p-2 mr-1">
+                        disabled={disabled || !inputText.trim()}
+                        className={`p-2 mr-1 ${(disabled || !inputText.trim()) ? 'opacity-50' : ''}`}>
                         <Send color="white" size={24} />
                     </TouchableOpacity>
                 </View>
