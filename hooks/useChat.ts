@@ -14,18 +14,46 @@ export const useChat = (initialMessage?: string) => {
         setIsStreaming(true);
         const responseId = generateMessageId();
 
-        // Get current example and increment index (loop back to 0 if we reach the end)
+        // Get current example
         const currentExample = MARKDOWN_EXAMPLES[currentExampleIndex];
+        const fullResponse = `**${currentExample.title}**\n\n${currentExample.content}`;
 
-        // Add the response message with both title and content
+        // Add initial empty message
         setMessages(prev => [...prev, {
             id: responseId,
-            text: `**${currentExample.title}**\n\n${currentExample.content}`,
+            text: '',
             isUser: false,
-            isStreaming: false
+            isStreaming: true
         }]);
 
-        // Update the index after sending the message
+        // Split response into chunks (words)
+        const words = fullResponse.split(' ');
+        let streamedText = '';
+
+        // Stream each word with a delay
+        for (let i = 0; i < words.length; i++) {
+            await new Promise(resolve => setTimeout(resolve, 50)); // 50ms delay between words
+            streamedText += (i === 0 ? '' : ' ') + words[i];
+            
+            setMessages(prev => 
+                prev.map(msg => 
+                    msg.id === responseId
+                        ? { ...msg, text: streamedText }
+                        : msg
+                )
+            );
+        }
+
+        // Mark message as complete
+        setMessages(prev =>
+            prev.map(msg =>
+                msg.id === responseId
+                    ? { ...msg, isStreaming: false }
+                    : msg
+            )
+        );
+
+        // Update the index for next response
         setCurrentExampleIndex((prevIndex) =>
             (prevIndex + 1) % MARKDOWN_EXAMPLES.length
         );
