@@ -113,6 +113,9 @@ export const useChat = () => {
         );
 
         setIsStreaming(false);
+        
+        // Return the ID so we can track this message
+        return responseId;
     }, [mathIndex, normalIndex, longIndex]);
 
     const addMessage = useCallback(async (text: string, isUser: boolean) => {
@@ -129,19 +132,20 @@ export const useChat = () => {
         // Get AI response when it's a user message
         if (isUser) {
             setIsStreaming(true);
-            const responseId = generateMessageId();
-
-            // Add initial empty message
-            setMessages(prev => [...prev, {
-                id: responseId,
-                text: '',
-                isUser: false,
-                isStreaming: true
-            }]);
-
+            
             try {
                 // Check if we should use API or simulated response
                 if (useApiResponse) {
+                    const responseId = generateMessageId();
+                    
+                    // Add initial empty message for API response
+                    setMessages(prev => [...prev, {
+                        id: responseId,
+                        text: '',
+                        isUser: false,
+                        isStreaming: true
+                    }]);
+                    
                     // Try to get AI response from API
                     const response = await getAIResponse([...messages, newMessage]);
                     
@@ -178,29 +182,23 @@ export const useChat = () => {
                             })
                         );
                     }
+                    
+                    // Mark message as complete
+                    setMessages(prev =>
+                        prev.map(msg =>
+                            msg.id === responseId
+                                ? { ...msg, isStreaming: false }
+                                : msg
+                        )
+                    );
                 } else {
-                    // Use simulated response
+                    // Use simulated response directly without creating an empty message first
                     await simulateResponse(text);
-                    // Remove the empty message we added
-                    setMessages(prev => prev.filter(msg => msg.id !== responseId));
-                    setIsStreaming(false);
-                    return;
                 }
-                
-                // Mark message as complete
-                setMessages(prev =>
-                    prev.map(msg =>
-                        msg.id === responseId
-                            ? { ...msg, isStreaming: false }
-                            : msg
-                    )
-                );
             } catch (error) {
                 console.log('Falling back to simulated response');
                 // If API fails, use simulated response
                 await simulateResponse(text);
-                // Remove the empty message we added
-                setMessages(prev => prev.filter(msg => msg.id !== responseId));
             }
 
             setIsStreaming(false);
