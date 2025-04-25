@@ -1,6 +1,6 @@
 import {
+    Mic,
     Plus,
-    Search,
     Send
 } from "lucide-react-native";
 import React from "react";
@@ -42,7 +42,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
                             className="p-1"
                             disabled={disabled}
                         >
-                            <Search color="white" size={20} />
+                            <Mic color="white" size={20} />
                         </TouchableOpacity>
                     </View>
                     <TouchableOpacity
