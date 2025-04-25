@@ -15,69 +15,49 @@ export default function Chat() {
     const {
         messages,
         isStreaming,
-        simulateStreamingResponse,
         addMessage
-    } = useChat(initialMessage || `
-# Welcome to Fluey AI!
-
-This is a test message to demonstrate markdown and math features:
-
-1. **Bold Text** and *Italic Text*
-2. Inline code: \`console.log("Hello")\`
-3. Math equations:
-   - Inline: $E = mc^2$
-   - Block: 
-     $$
-     \\int_{a}^{b} f(x)dx = F(b) - F(a)
-     $$
-
-Try sending a message to see more examples!
-`);
+    } = useChat(initialMessage || "Welcome to Fluey AI! Send a message to start the conversation.");
 
     const handleInputChange = useCallback((text: string) => {
         setInputText(text);
     }, []);
 
-    const handleSubmit = useCallback(() => {
+    const handleSubmit = useCallback(async () => {
         if (inputText.trim() && !isStreaming) {
-            addMessage(inputText.trim(), true);
+            await addMessage(inputText.trim(), true);
             setInputText("");
 
-            // Scroll to bottom immediately after user message
+            // Scroll to bottom after sending message
             flatListRef.current?.scrollToEnd({ animated: true });
-
-            // Simulate AI response
-            simulateStreamingResponse("This is a simulated streaming response that demonstrates the progressive appearance of text in a natural way.");
         }
-    }, [inputText, isStreaming, addMessage, simulateStreamingResponse]);
+    }, [inputText, isStreaming, addMessage]);
 
     return (
         <SafeAreaView className="flex-1 bg-zinc-900">
-            <StatusBar style='dark' />
-            <View className="flex-row justify-center items-center p-4 border-b border-zinc-700">
+            <StatusBar style="light" />
+            <View className="flex-row justify-center items-center p-4 border-b border-zinc-700 mb-2">
                 <TouchableOpacity className="bg-zinc-700 px-4 py-2 rounded-full flex-row items-center">
                     <Text className="text-white mr-1">Fluey AI</Text>
                 </TouchableOpacity>
             </View>
-            <FlatList
-                ref={flatListRef}
-                data={messages}
-                renderItem={({ item }) => <MessageItem message={item} />}
-                keyExtractor={(item) => item.id}
-                contentContainerStyle={{ padding: 16 }}
-                onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
-                onLayout={() => flatListRef.current?.scrollToEnd({ animated: true })}
-                maintainVisibleContentPosition={{
-                    minIndexForVisible: 0,
-                    autoscrollToTopThreshold: 10
-                }}
-            />
-            <ChatInput
-                inputText={inputText}
-                onInputChange={handleInputChange}
-                onSubmit={handleSubmit}
-                disabled={isStreaming}
-            />
+            <View className="flex-1">
+                <FlatList
+                    ref={flatListRef}
+                    data={messages}
+                    keyExtractor={item => item.id}
+                    renderItem={({ item }) => (
+                        <MessageItem message={item} />
+                    )}
+                    onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
+                    className="flex-1 px-4"
+                />
+                <ChatInput
+                    inputText={inputText}
+                    onInputChange={handleInputChange}
+                    onSubmit={handleSubmit}
+                    disabled={isStreaming}
+                />
+            </View>
         </SafeAreaView>
     );
 }
