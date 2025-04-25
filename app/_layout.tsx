@@ -5,6 +5,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from "react";
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import "../global.css";
+import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 
 export default function RootLayout() {
   const [fontsLoaded, error] = useFonts({
@@ -26,10 +27,11 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <StatusBar style="light" backgroundColor="#18181b" />
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          animation: "fade",
+      <BottomSheetModalProvider>
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            animation: "fade",
           animationDuration: 200,
           presentation: "transparentModal",
           contentStyle: {
@@ -52,6 +54,7 @@ export default function RootLayout() {
           }}
         />
       </Stack>
+      </BottomSheetModalProvider>
     </GestureHandlerRootView>
   );
 }

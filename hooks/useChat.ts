@@ -40,6 +40,7 @@ export const useChat = () => {
     const [mathIndex, setMathIndex] = useState(0);
     const [longIndex, setLongIndex] = useState(0);
     const [lastApiResponse, setLastApiResponse] = useState<AIResponse | null>(null);
+    const [useApiResponse, setUseApiResponse] = useState(true);
 
     const simulateResponse = useCallback(async (userText: string) => {
         setIsStreaming(true);
@@ -139,41 +140,51 @@ export const useChat = () => {
             }]);
 
             try {
-                // Try to get AI response from API
-                const response = await getAIResponse([...messages, newMessage]);
-                
-                // Store the full API response
-                setLastApiResponse(response);
-                
-                // Get the content from the response
-                const fullResponse = response.content;
-                
-                // Determine streaming parameters based on content length
-                const isLongResponse = fullResponse.length > 100;
-                const baseDelay = isLongResponse ? 5 : 15;
-                const batchSize = isLongResponse ? 15 : 5;
+                // Check if we should use API or simulated response
+                if (useApiResponse) {
+                    // Try to get AI response from API
+                    const response = await getAIResponse([...messages, newMessage]);
+                    
+                    // Store the full API response
+                    setLastApiResponse(response);
+                    
+                    // Get the content from the response
+                    const fullResponse = response.content;
+                    
+                    // Determine streaming parameters based on content length
+                    const isLongResponse = fullResponse.length > 100;
+                    const baseDelay = isLongResponse ? 5 : 15;
+                    const batchSize = isLongResponse ? 15 : 5;
 
-                // Stream characters with appropriate batch size and delay
-                for (let i = 0; i < fullResponse.length; i += batchSize) {
-                    await new Promise(resolve => setTimeout(resolve, baseDelay));
-                    
-                    // Process a batch of characters
-                    const endIndex = Math.min(i + batchSize, fullResponse.length);
-                    const batchText = fullResponse.substring(i, endIndex);
-                    
-                    // Update message with new batch of text
-                    setMessages(prev =>
-                        prev.map(msg => {
-                            if (msg.id === responseId) {
-                                const newText = msg.text + batchText;
-                                return {
-                                    ...msg,
-                                    text: newText
-                                };
-                            }
-                            return msg;
-                        })
-                    );
+                    // Stream characters with appropriate batch size and delay
+                    for (let i = 0; i < fullResponse.length; i += batchSize) {
+                        await new Promise(resolve => setTimeout(resolve, baseDelay));
+                        
+                        // Process a batch of characters
+                        const endIndex = Math.min(i + batchSize, fullResponse.length);
+                        const batchText = fullResponse.substring(i, endIndex);
+                        
+                        // Update message with new batch of text
+                        setMessages(prev =>
+                            prev.map(msg => {
+                                if (msg.id === responseId) {
+                                    const newText = msg.text + batchText;
+                                    return {
+                                        ...msg,
+                                        text: newText
+                                    };
+                                }
+                                return msg;
+                            })
+                        );
+                    }
+                } else {
+                    // Use simulated response
+                    await simulateResponse(text);
+                    // Remove the empty message we added
+                    setMessages(prev => prev.filter(msg => msg.id !== responseId));
+                    setIsStreaming(false);
+                    return;
                 }
                 
                 // Mark message as complete
@@ -194,12 +205,18 @@ export const useChat = () => {
 
             setIsStreaming(false);
         }
-    }, [messages, simulateResponse]);
+    }, [messages, simulateResponse, useApiResponse]);
+
+    const toggleUseApiResponse = useCallback(() => {
+        setUseApiResponse(prev => !prev);
+    }, []);
 
     return {
         messages,
         isStreaming,
         addMessage,
-        lastApiResponse
+        lastApiResponse,
+        useApiResponse,
+        toggleUseApiResponse
     };
 };
