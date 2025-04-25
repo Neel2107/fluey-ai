@@ -154,12 +154,6 @@ export default function Chat() {
             </Text>
           </View>
           <View className="flex-row">
-            <TouchableOpacity 
-              onPress={handleClearChat} 
-              className="mr-4 bg-zinc-700 p-2 rounded-full"
-            >
-              <Trash2 size={20} color="white" />
-            </TouchableOpacity>
             <TouchableOpacity onPress={toggleBottomSheet}>
               <HamburgerMenu onPress={toggleBottomSheet} />
             </TouchableOpacity>

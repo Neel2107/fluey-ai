@@ -3,7 +3,7 @@ import { DrawerContentScrollView } from '@react-navigation/drawer';
 import { router } from 'expo-router';
 import { Plus, MessageSquare, Trash2 } from 'lucide-react-native';
 import React, { useCallback } from 'react';
-import { View, Text, TouchableOpacity, Alert, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, Alert } from 'react-native';
 import { format } from 'date-fns';
 
 interface ChatHistoryDrawerProps {
@@ -56,50 +56,50 @@ const ChatHistoryDrawer: React.FC<ChatHistoryDrawerProps> = (props) => {
   return (
     <DrawerContentScrollView
       {...props}
-      contentContainerStyle={styles.container}
+      className="flex-1 px-4"
     >
-      <View style={styles.header}>
-        <Text style={styles.title}>Fluey AI</Text>
+      <View className="mb-6 py-2">
+        <Text className="text-2xl font-bold text-white">Fluey AI</Text>
       </View>
 
       <TouchableOpacity
-        style={styles.newChatButton}
+        className="flex-row items-center bg-blue-500 py-3 px-4 rounded-lg mb-4"
         onPress={handleNewChat}
         activeOpacity={0.7}
       >
         <Plus size={20} color="#fff" />
-        <Text style={styles.newChatText}>New Chat</Text>
+        <Text className="text-white text-base font-medium ml-2">New Chat</Text>
       </TouchableOpacity>
 
-      <View style={styles.divider} />
+      <View className="h-[1px] bg-zinc-800 mb-4" />
 
-      <Text style={styles.sectionTitle}>Chat History</Text>
+      <Text className="text-base font-medium text-zinc-400 mb-3">Chat History</Text>
 
       {sessions.length === 0 ? (
-        <View style={styles.emptyState}>
+        <View className="items-center justify-center py-6">
           <MessageSquare size={24} color="#a1a1aa" />
-          <Text style={styles.emptyStateText}>No chat history yet</Text>
+          <Text className="text-zinc-400 mt-2">No chat history yet</Text>
         </View>
       ) : (
-        <View style={styles.chatList}>
+        <View className="mb-4">
           {sessions.map(session => (
-            <View key={session.id} style={styles.chatItem}>
+            <View key={session.id} className="flex-row items-center mb-2">
               <TouchableOpacity
-                style={styles.chatButton}
+                className="flex-1 py-3 px-3 bg-zinc-800 rounded-lg"
                 onPress={() => handleChatSelect(session.id)}
                 activeOpacity={0.7}
               >
-                <View style={styles.chatInfo}>
-                  <Text style={styles.chatTitle} numberOfLines={1} ellipsizeMode="tail">
+                <View className="flex-1">
+                  <Text className="text-white text-sm font-medium mb-1" numberOfLines={1} ellipsizeMode="tail">
                     {session.title}
                   </Text>
-                  <Text style={styles.chatDate}>
+                  <Text className="text-zinc-400 text-xs">
                     {formatDate(session.updatedAt)}
                   </Text>
                 </View>
               </TouchableOpacity>
               <TouchableOpacity
-                style={styles.deleteButton}
+                className="p-2 ml-2"
                 onPress={() => handleDeleteChat(session.id, session.title)}
                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               >
@@ -112,88 +112,5 @@ const ChatHistoryDrawer: React.FC<ChatHistoryDrawerProps> = (props) => {
     </DrawerContentScrollView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingHorizontal: 16,
-  },
-  header: {
-    marginBottom: 24,
-    paddingVertical: 8,
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#ffffff',
-  },
-  newChatButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#3b82f6',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    marginBottom: 16,
-  },
-  newChatText: {
-    color: '#ffffff',
-    fontSize: 16,
-    fontWeight: '500',
-    marginLeft: 8,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: '#27272a',
-    marginBottom: 16,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#a1a1aa',
-    marginBottom: 12,
-  },
-  emptyState: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 24,
-  },
-  emptyStateText: {
-    color: '#a1a1aa',
-    marginTop: 8,
-  },
-  chatList: {
-    marginBottom: 16,
-  },
-  chatItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  chatButton: {
-    flex: 1,
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    backgroundColor: '#27272a',
-    borderRadius: 8,
-  },
-  chatInfo: {
-    flex: 1,
-  },
-  chatTitle: {
-    color: '#ffffff',
-    fontSize: 14,
-    fontWeight: '500',
-    marginBottom: 4,
-  },
-  chatDate: {
-    color: '#a1a1aa',
-    fontSize: 12,
-  },
-  deleteButton: {
-    padding: 8,
-    marginLeft: 8,
-  },
-});
 
 export default ChatHistoryDrawer;

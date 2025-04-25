@@ -54,6 +54,10 @@ export const useChat = (initialMessages: Message[] = []) => {
             };
             
             loadSavedMessages();
+        } else {
+            // Update messages when initialMessages changes (e.g., when switching chats)
+            console.log('Updating messages from initialMessages:', initialMessages.length);
+            setMessages(initialMessages);
         }
     }, [initialMessages]);
 
