@@ -32,10 +32,8 @@ const LONG_RESPONSES = [
     "The history of computing spans centuries, from mechanical calculators to modern quantum computers. Charles Babbage's Analytical Engine in the 19th century laid the theoretical groundwork for programmable computers. The mid-20th century saw the development of ENIAC, one of the first general-purpose electronic computers. The invention of the transistor in 1947 led to smaller, more reliable computers."
 ];
 
-export const useChat = (initialMessage?: string) => {
-    const [messages, setMessages] = useState<Message[]>(
-        initialMessage ? [{ id: generateMessageId(), text: initialMessage, isUser: true }] : []
-    );
+export const useChat = () => {
+    const [messages, setMessages] = useState<Message[]>([]);
     const [isStreaming, setIsStreaming] = useState(false);
     const [normalIndex, setNormalIndex] = useState(0);
     const [mathIndex, setMathIndex] = useState(0);
@@ -73,11 +71,11 @@ export const useChat = (initialMessage?: string) => {
         // Stream characters with appropriate batch size and delay
         for (let i = 0; i < fullResponse.length; i += batchSize) {
             await new Promise(resolve => setTimeout(resolve, baseDelay));
-            
+
             // Process a batch of characters
             const endIndex = Math.min(i + batchSize, fullResponse.length);
             const batchText = fullResponse.substring(i, endIndex);
-            
+
             // Update message with new batch of text
             setMessages(prev =>
                 prev.map(msg => {
@@ -119,7 +117,8 @@ export const useChat = (initialMessage?: string) => {
         setMessages(prev => [...prev, {
             id: generateMessageId(),
             text: text.trim(),
-            isUser
+            isUser,
+            isStreaming: false
         }]);
 
         // Simulate AI response when it's a user message

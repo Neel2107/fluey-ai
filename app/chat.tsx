@@ -3,7 +3,7 @@ import ChatInput from '@/components/Home/ChatInput';
 import { useChat } from '@/hooks/useChat';
 import { useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { FlatList, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -11,12 +11,21 @@ export default function Chat() {
     const { initialMessage } = useLocalSearchParams<{ initialMessage: string }>();
     const [inputText, setInputText] = useState("");
     const flatListRef = useRef<FlatList>(null);
+    const initialMessageProcessed = useRef(false);
 
     const {
         messages,
         isStreaming,
         addMessage
-    } = useChat(initialMessage || "Welcome to Fluey AI! Send a message to start the conversation.");
+    } = useChat();
+
+    // Process initial message and trigger AI response
+    useEffect(() => {
+        if (initialMessage && !initialMessageProcessed.current) {
+            initialMessageProcessed.current = true;
+            addMessage(initialMessage, true);
+        }
+    }, [initialMessage, addMessage]);
 
     const handleInputChange = useCallback((text: string) => {
         setInputText(text);
