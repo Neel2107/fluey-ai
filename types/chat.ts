@@ -3,8 +3,4 @@ export interface Message {
     text: string;
     isUser: boolean;
     isStreaming?: boolean;
-    characters?: {
-        text: string;
-        id: number;
-    }[];
 }

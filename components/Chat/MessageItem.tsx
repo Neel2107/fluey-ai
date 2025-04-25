@@ -5,8 +5,7 @@ import MathView from 'react-native-math-view';
 import Animated, {
     FadeIn,
     FadeInRight,
-    LinearTransition,
-    FadeInUp
+    LinearTransition
 } from 'react-native-reanimated';
 import { MarkdownRenderer } from './MarkdownRenderer';
 
@@ -38,35 +37,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message }) => {
         /^\$\$.*?\$\$$/.test(message.text.trim());
 
     const renderContent = () => {
-        // If streaming and we have characters, render them with animation
-        if (message.isStreaming && message.characters && message.characters.length > 0) {
-            // For math expressions, we need to render the whole expression
-            if (isMathExpression) {
-                return (
-                    <MathView
-                        math={message.text.replace(/^\$|\$$/g, '')}
-                        style={{ backgroundColor: 'transparent' }}
-                    />
-                );
-            }
-            
-            // For other content, show animated characters
-            return (
-                <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
-                    {message.characters.map((char) => (
-                        <Animated.Text
-                            key={char.id}
-                            entering={FadeIn.duration(200)}
-                            className="text-white"
-                        >
-                            {char.text}
-                        </Animated.Text>
-                    ))}
-                </View>
-            );
-        }
-
-        // For completed math expressions
+        // For math expressions
         if (isMathExpression) {
             return (
                 <MathView
@@ -76,12 +47,12 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message }) => {
             );
         }
 
-        // For completed markdown
+        // For markdown content
         if (containsMarkdown(message.text)) {
             return <MarkdownRenderer content={message.text} />;
         }
 
-        // For completed plain text
+        // For plain text
         return <Text className="text-white">{message.text}</Text>;
     };
 
@@ -91,7 +62,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message }) => {
             entering={message.isUser
                 ? FadeInRight.damping(12)
                 : FadeIn.duration(300)}
-            layout={LinearTransition.springify().damping(14)}
+            layout={LinearTransition.damping(14)}
             className={`mb-4 flex ${message.isUser ? 'items-end' : 'items-start'}`}
         >
             <Animated.View
