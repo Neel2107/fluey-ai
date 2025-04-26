@@ -2,8 +2,6 @@ import React, { useCallback } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
-  Switch,
   TouchableOpacity,
   Alert,
 } from 'react-native';
@@ -41,7 +39,6 @@ const CustomBottomSheet: React.FC<CustomBottomSheetProps> = ({
   const snapPoints = React.useMemo(() => ['40%'], []);
   const insets = useSafeAreaInsets();
   
-  // Callbacks
   const handleSheetChanges = useCallback((index: number) => {
     console.log('handleSheetChanges', index);
   }, []);
@@ -111,23 +108,23 @@ const CustomBottomSheet: React.FC<CustomBottomSheetProps> = ({
       snapPoints={snapPoints}
       onChange={handleSheetChanges}
       enablePanDownToClose={true}
-      handleIndicatorStyle={styles.indicator}
+      handleIndicatorStyle={{ backgroundColor: '#555555', width: 40 }}
       backdropComponent={renderBackdrop}
-      backgroundStyle={styles.sheetBackground}
+      backgroundStyle={{ backgroundColor: '#1F1F1F' }}
     >
-      <BottomSheetView style={[styles.contentContainer, { paddingBottom: insets.bottom }]}>
-        <Text style={styles.title}>Settings</Text>
+      <BottomSheetView className="flex-1 p-4" style={{ paddingBottom: insets.bottom }}>
+        <Text className="text-xl font-bold text-white mb-6">Settings</Text>
         
-        <View style={styles.option}>
-          <Text style={styles.optionText}>Show API Info</Text>
+        <View className="flex-row justify-between items-center mb-4">
+          <Text className="text-base text-white">Show API Info</Text>
           <CustomSwitch
             value={showApiInfo}
             onValueChange={toggleApiInfo}
           />
         </View>
         
-        <View style={styles.option}>
-          <Text style={styles.optionText}>Use API Response</Text>
+        <View className="flex-row justify-between items-center mb-4">
+          <Text className="text-base text-white">Use API Response</Text>
           <CustomSwitch
             value={useApiResponse}
             onValueChange={toggleUseApiResponse}
@@ -136,32 +133,32 @@ const CustomBottomSheet: React.FC<CustomBottomSheetProps> = ({
         
         {clearMessages && (
           <TouchableOpacity 
-            style={styles.clearChatButton} 
+            className="flex-row items-center bg-zinc-800 p-3 rounded-lg my-2"
             onPress={handleClearChat}
             activeOpacity={0.7}
           >
             <Trash2 size={20} color="#FF4545" />
-            <Text style={styles.clearChatText}>Clear Chat History</Text>
+            <Text className="text-red-500 text-base font-medium ml-3">Clear Chat History</Text>
           </TouchableOpacity>
         )}
 
         {deleteChat && (
           <TouchableOpacity 
-            style={[styles.clearChatButton, { backgroundColor: '#3A1A1A' }]} 
+            className="flex-row items-center bg-[#3A1A1A] p-3 rounded-lg my-2"
             onPress={handleDeleteChat}
             activeOpacity={0.7}
           >
             <Trash2 size={20} color="#FF4545" />
-            <Text style={styles.clearChatText}>Delete Chat</Text>
+            <Text className="text-red-500 text-base font-medium ml-3">Delete Chat</Text>
           </TouchableOpacity>
         )}
         
         {showApiInfo && apiInfo && (
-          <View style={styles.apiInfoContainer}>
-            <Text style={styles.apiInfoTitle}>API Information</Text>
-            <Text style={styles.apiInfoText}>Model: {apiInfo.model}</Text>
-            <Text style={styles.apiInfoText}>Provider: {apiInfo.provider}</Text>
-            <Text style={styles.apiInfoText}>
+          <View className="mt-6 p-4 bg-zinc-800 rounded-lg">
+            <Text className="text-base font-bold text-white mb-2">API Information</Text>
+            <Text className="text-sm text-zinc-300 mb-1">Model: {apiInfo.model}</Text>
+            <Text className="text-sm text-zinc-300 mb-1">Provider: {apiInfo.provider}</Text>
+            <Text className="text-sm text-zinc-300">
               Tokens: {apiInfo.promptTokens} prompt / {apiInfo.completionTokens} completion
             </Text>
           </View>
@@ -170,66 +167,5 @@ const CustomBottomSheet: React.FC<CustomBottomSheetProps> = ({
     </BottomSheetModal>
   );
 };
-
-const styles = StyleSheet.create({
-  sheetBackground: {
-    backgroundColor: '#1F1F1F',
-  },
-  contentContainer: {
-    flex: 1,
-    padding: 16,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    marginBottom: 24,
-  },
-  option: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  optionText: {
-    fontSize: 16,
-    color: '#FFFFFF',
-  },
-  apiInfoContainer: {
-    marginTop: 24,
-    padding: 16,
-    backgroundColor: '#2A2A2A',
-    borderRadius: 8,
-  },
-  apiInfoTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    marginBottom: 8,
-  },
-  apiInfoText: {
-    fontSize: 14,
-    color: '#CCCCCC',
-    marginBottom: 4,
-  },
-  indicator: {
-    backgroundColor: '#555555',
-    width: 40,
-  },
-  clearChatButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#2A2A2A',
-    padding: 12,
-    borderRadius: 8,
-    marginVertical: 8,
-  },
-  clearChatText: {
-    color: '#FF4545',
-    fontSize: 16,
-    fontWeight: '500',
-    marginLeft: 12,
-  },
-});
 
 export default CustomBottomSheet;

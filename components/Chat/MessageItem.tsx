@@ -1,6 +1,6 @@
 import { Message } from '@/types/chat';
 import React from 'react';
-import { Text, View } from 'react-native';
+import { Text } from 'react-native';
 import MathView from 'react-native-math-view';
 import Animated, {
     FadeIn,
@@ -53,7 +53,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message }) => {
         }
 
         // For plain text
-        return <Text className="text-white">{message.text}</Text>;
+        return <Text className="text-white text-base">{message.text}</Text>;
     };
 
     return (
