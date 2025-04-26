@@ -76,19 +76,19 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) =
                     while ((match = regex.exec(node.content)) !== null) {
                         if (match.index > lastIndex) {
                             parts.push(
-                                <Text key={lastIndex} style={styles.text}>
+                                <Text key={`text-${lastIndex}-${match.index}`} style={styles.text}>
                                     {node.content.slice(lastIndex, match.index)}
                                 </Text>
                             );
                         }
                         parts.push(
-                            <MathView key={match.index} math={`\\color{white}{${match[1]}}`} />
+                            <MathView key={`math-${match.index}`} math={`\\color{white}{${match[1]}}`} />
                         );
                         lastIndex = match.index + match[0].length;
                     }
                     if (lastIndex < node.content.length) {
                         parts.push(
-                            <Text key={lastIndex + 10000} style={styles.text}>
+                            <Text key={`text-${lastIndex}-end`} style={styles.text}>
                                 {node.content.slice(lastIndex)}
                             </Text>
                         );

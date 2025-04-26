@@ -65,7 +65,17 @@ const ChatScreen = () => {
         processingInitialMessage.current = true;
         console.log('New session with initial message detected - WILL PROCESS');
 
+        const streamingMessage: Message = {
+          id: generateMessageId(),
+          text: '',
+          isUser: false,
+          isStreaming: true
+        };
+
         try {
+          // Add a streaming message first
+          setMessages(prev => [...prev, streamingMessage]);
+
           // Manually trigger the API response
           console.log('Setting isStreaming to true');
           setIsStreaming(true);
@@ -89,18 +99,17 @@ const ChatScreen = () => {
             console.log('Creating AI message with response content');
             // Create a new AI message
             const aiMessage: Message = {
-              id: generateMessageId(),
+              id: streamingMessage.id, // Use the same ID as the streaming message
               text: apiResponse.content,
               isUser: false,
               isStreaming: false
             };
 
             console.log('Updating messages state with AI response');
-            // Add the AI message to the messages state
-            setMessages(prev => {
-              console.log('Previous messages count:', prev.length);
-              return [...prev, aiMessage];
-            });
+            // Update the streaming message with the actual content
+            setMessages(prev => prev.map(msg => 
+              msg.id === streamingMessage.id ? aiMessage : msg
+            ));
 
             console.log('Updating lastApiResponse state');
             // Update the lastApiResponse state
@@ -115,12 +124,17 @@ const ChatScreen = () => {
             }
           } else {
             console.error('API response was null or undefined');
+            // Remove the streaming message if API call failed
+            setMessages(prev => prev.filter(msg => msg.id !== streamingMessage.id));
           }
         } catch (error) {
           console.error('Error generating initial response:', error);
+          // Remove the streaming message if there was an error
+          setMessages(prev => prev.filter(msg => msg.id !== streamingMessage.id));
         } finally {
           console.log('Setting isStreaming to false');
           setIsStreaming(false);
+          processingInitialMessage.current = false;
         }
       } else {
         if (processingInitialMessage.current) {
