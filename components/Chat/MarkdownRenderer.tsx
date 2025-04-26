@@ -54,24 +54,6 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) =
         },
     });
 
-    // Custom rule for inline math ($...$)
-    const inlineMathRule = {
-        pattern: /\$(.+?)\$/g,
-        react: (match: string[], key: number) => (
-            <MathView key={key} math={match[1]} style={{ color: 'white' }} />
-        ),
-    };
-
-    // Custom rule for block math ($$...$$)
-    const blockMathRule = {
-        pattern: /^\s*\$\$([\s\S]+?)\$\$\s*$/m,
-        react: (match: string[], key: number) => (
-            <View key={key} style={markdownStyles.mathContainer}>
-                <MathView math={match[1]} style={{ color: 'white' }} />
-            </View>
-        ),
-    };
-
     return (
         <Markdown
             style={markdownStyles}
@@ -82,7 +64,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) =
                     if (blockMatch) {
                         return (
                             <View style={markdownStyles.mathContainer}>
-                                <MathView math={`\\color{white}{${blockMatch[1]}}`} />
+                                <MathView math={`\color{white}{${blockMatch[1]}}`} />
                             </View>
                         );
                     }
