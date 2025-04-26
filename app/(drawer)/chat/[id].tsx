@@ -17,7 +17,7 @@ import { Alert, FlatList, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AnimatedScreenContainer } from '../_layout';
 
-export default function Chat() {
+const ChatScreen = () => {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [inputText, setInputText] = useState("");
   const flatListRef = useRef<FlatList>(null);
@@ -296,3 +296,4 @@ export default function Chat() {
     </AnimatedScreenContainer>
   );
 }
+export default ChatScreen;

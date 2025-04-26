@@ -1,6 +1,7 @@
 import { useTheme } from '@/hooks/useTheme';
+import { MathService } from '@/services/MathService';
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text } from 'react-native';
 import Markdown from 'react-native-markdown-display';
 
 interface MarkdownRendererProps {
@@ -61,40 +62,38 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) =
 
     // Pre-process content to handle math expressions
     const processedContent = content
-        .replace(/\$\$(.*?)\$\$/g, (_, math) => `\`\`\`math\n${math}\n\`\`\``) // Block math
-        .replace(/\$(.*?)\$/g, (_, math) => `\`${math}\``); // Inline math
+        .replace(/\$\$(.*?)\$\$/g, (_, math) => `\`\`\`math\n${math}\n\`\`\``)
+        .replace(/\$(.*?)\$/g, (_, math) => `\`${math}\``);
 
     return (
         <Markdown
             style={markdownStyles}
             rules={{
                 code_inline: (node, children, parent, styles) => {
-                    // Check if this is a math expression
                     if (node.content.startsWith('$') && node.content.endsWith('$')) {
                         return (
-                            <Text style={[styles.math_inline]}>
-                                {node.content.slice(1, -1)}
-                            </Text>
+                            <MathService
+                                expression={node.content}
+                                style={styles.math_inline}
+                            />
                         );
                     }
                     return <Text style={[styles.code_inline]}>{node.content}</Text>;
                 },
                 code_block: (node, children, parent, styles) => {
-                    // Check if this is a block math expression
                     if (node.content.startsWith('math\n')) {
                         return (
-                            <View style={[styles.math_block]}>
-                                <Text style={{ color: colors.mathText }}>
-                                    {node.content.slice(5)}
-                                </Text>
-                            </View>
+                            <MathService
+                                expression={node.content.slice(5)}
+                                style={styles.math_block}
+                            />
                         );
                     }
-                    return <Text style={[styles.code_block]}>{node.content}</Text>;
+                    return <Text className='text-base' style={[styles.code_block]}>{node.content}</Text>;
                 },
             }}
         >
             {processedContent}
         </Markdown>
     );
-}; 
+};

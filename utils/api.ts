@@ -1,6 +1,8 @@
 import { Message } from '@/types/chat';
+import { getGeminiResponse } from './geminiApi';
 
 const OPENROUTER_API_KEY = process.env.EXPO_PUBLIC_OPENROUTER_API_KEY || '';
+const GEMINI_API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY || '';
 const SITE_URL = 'https://fluey-ai.vercel.app';
 const SITE_NAME = 'Fluey AI';
 
@@ -26,7 +28,7 @@ export interface AIResponse {
 };
 
 // Function to generate a fallback response
-const generateFallbackResponse = (messages: Message[]): AIResponse => {
+export const generateFallbackResponse = (messages: Message[]): AIResponse => {
     const lastUserMessage = [...messages].reverse().find(msg => msg.isUser);
     let responseIndex = 0;
 
@@ -65,12 +67,14 @@ export const getAIResponse = async (messages: Message[]): Promise<AIResponse> =>
             });
         }
 
-        // Check if API key is configured
-        if (!OPENROUTER_API_KEY) {
-            console.log('OpenRouter API key is not configured. Using fallback response mechanism.');
-            const fallbackResponse = generateFallbackResponse(messages);
-            console.log('Generated fallback response:', fallbackResponse.content.substring(0, 50));
-            return fallbackResponse;
+        if (!OPENROUTER_API_KEY && !GEMINI_API_KEY) {
+            console.log('No API keys configured. Using fallback response mechanism.');
+            return generateFallbackResponse(messages);
+        }
+
+        // Prefer Gemini if available
+        if (GEMINI_API_KEY) {
+            return getGeminiResponse(messages);
         }
 
         console.log('Preparing API request with key:', OPENROUTER_API_KEY ? '(Key exists)' : '(No key)');
