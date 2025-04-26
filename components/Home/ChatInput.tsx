@@ -36,6 +36,10 @@ const ChatInput: React.FC<ChatInputProps> = ({
                             onSubmitEditing={onSubmit}
                             editable={!disabled}
                             cursorColor="#fff"
+                            keyboardAppearance="dark"
+                            returnKeyType="send"
+                            enablesReturnKeyAutomatically
+                            // blurOnSubmit={false}
                         />
                         <TouchableOpacity
                             // onPress={onSubmit}

@@ -7,13 +7,14 @@ import { useChatStore } from '@/store/chatStore';
 import { Message } from '@/types/chat';
 import { getAIResponse } from '@/utils/api';
 import { generateMessageId } from '@/utils/messageUtils';
-import { BottomSheetModal, BottomSheetModalProvider } from '@gorhom/bottom-sheet';
+import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { DrawerNavigationProp } from '@react-navigation/drawer';
 import { useLocalSearchParams, useNavigation } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Menu } from 'lucide-react-native';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, FlatList, Text, TouchableOpacity, View } from 'react-native';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AnimatedScreenContainer } from '../_layout';
 
@@ -136,7 +137,7 @@ const ChatScreen = () => {
     if (session && session.messages.length === 1 && session.messages[0].isUser) {
       processInitialMessage();
     }
-  }, [session?.messages]); 
+  }, [session?.messages]);
 
   // Sync messages back to the store when they change
   useEffect(() => {
@@ -235,47 +236,53 @@ const ChatScreen = () => {
     >
 
 
-    <SafeAreaView className="flex-1 bg-zinc-900">
-      <BottomSheetModalProvider>
-        <StatusBar style="light" />
-        <View className="flex-row justify-between items-center p-4 border-b border-zinc-700 mb-2">
-          <View className="flex-row items-center">
-            <TouchableOpacity
-              onPress={openDrawer}
-              className="mr-3"
-            >
-              <Menu color="white" size={24} />
-            </TouchableOpacity>
-            <Text className="text-white font-medium" numberOfLines={1} ellipsizeMode="tail">
-              {session.title}
-            </Text>
-          </View>
-          <View className="flex-row">
-            <TouchableOpacity onPress={toggleBottomSheet}>
-              <HamburgerMenu onPress={toggleBottomSheet} />
-            </TouchableOpacity>
-          </View>
-        </View>
+      <SafeAreaView className="flex-1 bg-zinc-900">
+        <KeyboardAvoidingView className="flex-1" behavior="padding">
 
-        <View className="flex-1">
-          <FlatList
-            ref={flatListRef}
-            data={messages}
-            keyExtractor={item => item.id}
-            renderItem={({ item }) => (
-              <MessageItem message={item} />
-            )}
-            onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
-            className="flex-1 px-4"
-          />
-          <ChatInput
-            inputText={inputText}
-            onInputChange={handleInputChange}
-            onSubmit={handleSubmit}
-            disabled={isStreaming}
-          />
-        </View>
 
+          <StatusBar style="light" />
+          <View className="flex-row justify-between items-center p-4 border-b border-zinc-700 mb-2">
+            <View className="flex-row items-center">
+              <TouchableOpacity
+                onPress={openDrawer}
+                className="mr-3"
+              >
+                <Menu color="white" size={24} />
+              </TouchableOpacity>
+              <Text className="text-white font-medium" numberOfLines={1} ellipsizeMode="tail">
+                {session.title}
+              </Text>
+            </View>
+            <View className="flex-row">
+              <TouchableOpacity onPress={toggleBottomSheet}>
+                <HamburgerMenu onPress={toggleBottomSheet} />
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          <View className="flex-1">
+            <FlatList
+              ref={flatListRef}
+              data={messages}
+              keyExtractor={item => item.id}
+              renderItem={({ item }) => (
+                <MessageItem message={item} />
+              )}
+              onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
+              className="flex-1 px-4"
+              windowSize={5} // Add this to optimize rendering window
+              maxToRenderPerBatch={10} // Limit batch rendering
+              removeClippedSubviews={true} // Remove items outside viewport
+              initialNumToRender={10} // Reduce initial render batch
+            />
+            <ChatInput
+              inputText={inputText}
+              onInputChange={handleInputChange}
+              onSubmit={handleSubmit}
+              disabled={isStreaming}
+            />
+          </View>
+        </KeyboardAvoidingView>
         <CustomBottomSheet
           bottomSheetModalRef={bottomSheetModalRef}
           showApiInfo={showApiInfo}
@@ -291,8 +298,8 @@ const ChatScreen = () => {
             completionTokens: lastApiResponse.usage.completion_tokens
           } : undefined}
         />
-      </BottomSheetModalProvider>
-    </SafeAreaView>
+
+      </SafeAreaView>
     </AnimatedScreenContainer>
   );
 }

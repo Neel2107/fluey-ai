@@ -11,8 +11,10 @@ export interface ChatSession {
   messages: Message[];
   createdAt: number;
   updatedAt: number;
+  lastViewedAt?: number; // Add this to track session activity
 }
-
+// Add pagination support
+const MESSAGES_PER_PAGE = 50;
 // Define the store state
 interface ChatState {
   sessions: ChatSession[];
@@ -85,7 +87,12 @@ export const useChatStore = create<ChatState>()(
         set((state) => ({
           sessions: state.sessions.map(session => 
             session.id === sessionId 
-              ? { ...session, messages, updatedAt: Date.now() } 
+              ? { 
+                  ...session, 
+                  messages: messages.slice(-MESSAGES_PER_PAGE), // Keep only recent messages in memory
+                  updatedAt: Date.now(),
+                  lastViewedAt: Date.now()
+                } 
               : session
           ),
         }));
