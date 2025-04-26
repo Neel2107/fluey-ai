@@ -5,20 +5,21 @@ import { DrawerNavigationProp } from '@react-navigation/drawer';
 import { router, useNavigation } from 'expo-router';
 import { StatusBar } from "expo-status-bar";
 import {
-  BarChart3,
-  FileText,
-  Image,
-  Lightbulb,
-  Menu,
-  MoreHorizontal,
-  Plus,
-  UserCircle
+    BarChart3,
+    Calculator,
+    FileText,
+    Image,
+    Lightbulb,
+    Menu,
+    MoreHorizontal,
+    Plus,
+    UserCircle
 } from "lucide-react-native";
 import React, { useState } from "react";
 import {
-  Text,
-  TouchableOpacity,
-  View
+    Text,
+    TouchableOpacity,
+    View
 } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import { KeyboardAvoidingView, useKeyboardAnimation } from "react-native-keyboard-controller";
@@ -91,6 +92,7 @@ export default function Index() {
               <SuggestionChip icon={FileText} text="Summarize text" />
               <SuggestionChip icon={BarChart3} text="Analyze data" />
               <SuggestionChip icon={Lightbulb} text="Make a plan" />
+              <SuggestionChip icon={Calculator} text="Math Examples" onPress={() => router.push('/math')} />
               <SuggestionChip icon={MoreHorizontal} text="More" />
             </View>
           </ScrollView>

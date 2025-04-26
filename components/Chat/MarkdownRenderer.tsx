@@ -1,8 +1,8 @@
 import { useTheme } from '@/hooks/useTheme';
-import { MathService } from '@/services/MathService';
 import React from 'react';
-import { StyleSheet, Text } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import Markdown from 'react-native-markdown-display';
+import MathView from 'react-native-math-view';
 
 interface MarkdownRendererProps {
     content: string;
@@ -43,57 +43,89 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) =
             borderRadius: 8,
             marginVertical: 8,
         },
-        math_inline: {
-            color: colors.mathText,
-            backgroundColor: colors.mathBackground,
-            paddingHorizontal: 4,
-            paddingVertical: 2,
-            borderRadius: 4,
-        },
-        math_block: {
-            color: colors.mathText,
-            backgroundColor: colors.mathBackground,
-            padding: 12,
-            borderRadius: 8,
+        mathContainer: {
             marginVertical: 8,
-            textAlign: 'center',
+            alignItems: 'center',
+            backgroundColor: 'transparent',
+        },
+        text: {
+            color: colors.text,
+            marginBottom: 8,
         },
     });
 
-    // Pre-process content to handle math expressions
-    const processedContent = content
-        .replace(/\$\$(.*?)\$\$/g, (_, math) => `\`\`\`math\n${math}\n\`\`\``)
-        .replace(/\$(.*?)\$/g, (_, math) => `\`${math}\``);
+    // Custom rule for inline math ($...$)
+    const inlineMathRule = {
+        pattern: /\$(.+?)\$/g,
+        react: (match: string[], key: number) => (
+            <MathView key={key} math={match[1]} style={{ color: 'white' }} />
+        ),
+    };
+
+    // Custom rule for block math ($$...$$)
+    const blockMathRule = {
+        pattern: /^\s*\$\$([\s\S]+?)\$\$\s*$/m,
+        react: (match: string[], key: number) => (
+            <View key={key} style={markdownStyles.mathContainer}>
+                <MathView math={match[1]} style={{ color: 'white' }} />
+            </View>
+        ),
+    };
 
     return (
         <Markdown
             style={markdownStyles}
             rules={{
-                code_inline: (node, children, parent, styles) => {
-                    if (node.content.startsWith('$') && node.content.endsWith('$')) {
+                text: (node, children, parent, styles) => {
+                    // Render block math if present
+                    const blockMatch = node.content.match(/^\s*\$\$([\s\S]+?)\$\$\s*$/m);
+                    if (blockMatch) {
                         return (
-                            <MathService
-                                expression={node.content}
-                                style={styles.math_inline}
-                            />
+                            <View style={markdownStyles.mathContainer}>
+                                <MathView math={`\\color{white}{${blockMatch[1]}}`} />
+                            </View>
                         );
                     }
-                    return <Text style={[styles.code_inline]}>{node.content}</Text>;
-                },
-                code_block: (node, children, parent, styles) => {
-                    if (node.content.startsWith('math\n')) {
-                        return (
-                            <MathService
-                                expression={node.content.slice(5)}
-                                style={styles.math_block}
-                            />
+                    // Render inline math if present
+                    const parts = [];
+                    let lastIndex = 0;
+                    const regex = /\$(.+?)\$/g;
+                    let match;
+                    while ((match = regex.exec(node.content)) !== null) {
+                        if (match.index > lastIndex) {
+                            parts.push(
+                                <Text key={lastIndex} style={styles.text}>
+                                    {node.content.slice(lastIndex, match.index)}
+                                </Text>
+                            );
+                        }
+                        parts.push(
+                            <MathView key={match.index} math={`\\color{white}{${match[1]}}`} />
+                        );
+                        lastIndex = match.index + match[0].length;
+                    }
+                    if (lastIndex < node.content.length) {
+                        parts.push(
+                            <Text key={lastIndex + 10000} style={styles.text}>
+                                {node.content.slice(lastIndex)}
+                            </Text>
                         );
                     }
-                    return <Text className='text-base' style={[styles.code_block]}>{node.content}</Text>;
+                    if (parts.length > 0) {
+                        return <>{parts}</>;
+                    }
+                    // Default text rendering
+                    return <Text style={styles.text}>{node.content}</Text>;
                 },
+                code_inline: (node, children, parent, styles) => (
+                    <Text style={[styles.code_inline]}>{node.content}</Text>
+                ),
+                code_block: (node, children, parent, styles) => (
+                    <Text className='text-base' style={[styles.code_block]}>{node.content}</Text>
+                ),
             }}
         >
-            {processedContent}
+            {content}
         </Markdown>
     );
 };
