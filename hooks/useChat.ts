@@ -138,7 +138,7 @@ export const useChat = (initialMessages: Message[] = []) => {
         currentStreamingIdRef.current = null;
     }, [mathIndex, normalIndex, longIndex]);
 
-    const addMessage = useCallback(async (text: string, isUser: boolean) => {
+    const addMessage = useCallback(async (text: string, isUser: boolean, forceNextFail: boolean = false) => {
         // Add user message
         const newMessage: Message = {
             id: generateMessageId(),
@@ -170,7 +170,7 @@ export const useChat = (initialMessages: Message[] = []) => {
 
                     // Get current messages including the user message we just added
                     const currentMessages = [...messagesRef.current, newMessage];
-                    const response = await getAIResponse(currentMessages);
+                    const response = await getAIResponse(currentMessages, { simulateFlaky: forceNextFail });
                     setLastApiResponse(response);
 
                     const fullResponse = response.content;

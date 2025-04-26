@@ -1,6 +1,6 @@
 import { Message } from '@/types/chat';
 import React from 'react';
-import { Text, View } from 'react-native';
+import { Text, TouchableOpacity, View } from 'react-native';
 import MathView from 'react-native-math-view';
 import Animated, {
     FadeIn,
@@ -22,7 +22,7 @@ const containsMarkdown = (text: string): boolean => {
         /\|.*\|/, // Tables
         /^\s*>/, // Blockquotes
         /\$.*?\$/, // Inline math
-        /\$\$.*?\$\$$/, // Block math
+        /\$\$.*?\$\$/, // Block math
     ];
 
     return markdownPatterns.some(pattern => pattern.test(text));
@@ -30,15 +30,25 @@ const containsMarkdown = (text: string): boolean => {
 
 interface MessageItemProps {
     message: Message;
+    onRetry?: (id: string) => void;
 }
 
-export const MessageItem: React.FC<MessageItemProps> = ({ message }) => {
+export const MessageItem: React.FC<MessageItemProps> = ({ message, onRetry }) => {
     // Check if text is a simple math expression (wrapped in $ or $$)
     const isMathExpression = /^\$.*?\$$/.test(message.text.trim()) ||
-        /^\$\$.*?\$\$$/.test(message.text.trim());
+        /^\$\$.*?\$\$/.test(message.text.trim());
 
     const renderContent = () => {
-        
+        if (message.failed) {
+            return (
+                <View style={{ alignItems: 'center' }}>
+                    <Text style={{ color: 'red', marginBottom: 8 }}>Failed to load. Check your connection.</Text>
+                    <TouchableOpacity onPress={() => onRetry?.(message.id)} style={{ padding: 8, backgroundColor: '#444', borderRadius: 6 }}>
+                        <Text style={{ color: 'white' }}>Retry</Text>
+                    </TouchableOpacity>
+                </View>
+            );
+        }
 
         if (message.isStreaming) {
             return (

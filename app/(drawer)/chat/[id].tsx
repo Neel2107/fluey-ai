@@ -26,6 +26,7 @@ const ChatScreen = () => {
   const [showApiInfo, setShowApiInfo] = useState(false);
   const navigation = useNavigation<DrawerNavigationProp<any>>();
   const processingInitialMessage = useRef(false);
+  const [forceNextFail, setForceNextFail] = useState(false);
 
   // Get chat session from store
   const {
@@ -152,13 +153,12 @@ const ChatScreen = () => {
 
   const handleSubmit = useCallback(async () => {
     if (inputText.trim() && !isStreaming && id) {
-      await addMessage(inputText.trim(), true);
+      await addMessage(inputText.trim(), true, forceNextFail);
       setInputText("");
-
-      // Scroll to bottom after sending message
       flatListRef.current?.scrollToEnd({ animated: true });
+      if (forceNextFail) setForceNextFail(false);
     }
-  }, [inputText, isStreaming, addMessage, id]);
+  }, [inputText, isStreaming, addMessage, id, forceNextFail]);
 
   const toggleApiInfo = useCallback(() => {
     setShowApiInfo(prev => !prev);
@@ -227,6 +227,34 @@ const ChatScreen = () => {
     }
   }, [session, id, navigation]);
 
+  // Retry handler for failed messages
+  const handleRetry = async (messageId: string) => {
+    // Mark the failed message as streaming again
+    setMessages(prev => prev.map(m =>
+      m.id === messageId ? { ...m, isStreaming: true, failed: false } : m
+    ));
+    try {
+      setIsStreaming(true);
+      const apiResponse = await getAIResponse([
+        ...messages.filter(m => m.isUser || m.id === messageId)
+      ], { simulateFlaky: forceNextFail });
+      if (apiResponse) {
+        // Replace the failed message with the new AI response
+        setMessages(prev => prev.map(m =>
+          m.id === messageId
+            ? { ...m, text: apiResponse.content, isStreaming: false, failed: false }
+            : m
+        ));
+      }
+    } catch (error) {
+      setMessages(prev => prev.map(m =>
+        m.id === messageId ? { ...m, failed: true, isStreaming: false } : m
+      ));
+    } finally {
+      setIsStreaming(false);
+    }
+  };
+
   if (!session) {
     return null;
   }
@@ -266,7 +294,7 @@ const ChatScreen = () => {
               data={messages}
               keyExtractor={item => item.id}
               renderItem={({ item }) => (
-                <MessageItem message={item} />
+                <MessageItem message={item} onRetry={handleRetry} />
               )}
               onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
               className="flex-1 px-4"
@@ -297,6 +325,8 @@ const ChatScreen = () => {
             promptTokens: lastApiResponse.usage.prompt_tokens,
             completionTokens: lastApiResponse.usage.completion_tokens
           } : undefined}
+          forceNextFail={forceNextFail}
+          setForceNextFail={setForceNextFail}
         />
 
       </SafeAreaView>

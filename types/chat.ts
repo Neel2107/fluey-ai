@@ -3,4 +3,5 @@ export interface Message {
     text: string;
     isUser: boolean;
     isStreaming?: boolean;
+    failed?: boolean;
 }

@@ -2,10 +2,10 @@ import { BottomSheetBackdrop, BottomSheetModal, BottomSheetView } from '@gorhom/
 import { Trash2 } from 'lucide-react-native';
 import React, { useCallback } from 'react';
 import {
-  Alert,
-  Text,
-  TouchableOpacity,
-  View,
+    Alert,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import CustomSwitch from './CustomSwitch';
@@ -24,6 +24,8 @@ interface CustomBottomSheetProps {
     promptTokens: number;
     completionTokens: number;
   };
+  forceNextFail?: boolean;
+  setForceNextFail?: (v: boolean) => void;
 }
 
 const CustomBottomSheet: React.FC<CustomBottomSheetProps> = ({
@@ -33,7 +35,9 @@ const CustomBottomSheet: React.FC<CustomBottomSheetProps> = ({
   useApiResponse,
   toggleUseApiResponse,
   deleteChat,
-  apiInfo
+  apiInfo,
+  forceNextFail,
+  setForceNextFail
 }) => {
   const snapPoints = React.useMemo(() => ['40%'], []);
   const insets = useSafeAreaInsets();
@@ -108,16 +112,22 @@ const CustomBottomSheet: React.FC<CustomBottomSheetProps> = ({
           />
         </View>
 
-        {/* {clearMessages && (
-          <TouchableOpacity 
-            className="flex-row items-center bg-zinc-800 p-3 rounded-lg my-2"
-            onPress={handleClearChat}
-            activeOpacity={0.7}
+        <View className="flex-row justify-between items-center mb-4">
+          <Text className="text-base text-white">Force Next Message to Fail</Text>
+          <TouchableOpacity
+            onPress={() => setForceNextFail && setForceNextFail(!forceNextFail)}
+            style={{
+              padding: 12,
+              backgroundColor: forceNextFail ? '#ef4444' : '#444',
+              borderRadius: 8,
+              marginLeft: 12,
+            }}
           >
-            <Trash2 size={20} color="#FF4545" />
-            <Text className="text-red-500 text-base font-medium ml-3">Clear Chat History</Text>
+            <Text style={{ color: 'white', textAlign: 'center' }}>
+              {forceNextFail ? 'ON' : 'OFF'}
+            </Text>
           </TouchableOpacity>
-        )} */}
+        </View>
 
         <View className="flex-row justify-between items-center mb-4">
           <Text className="text-base text-white">Delete Chat</Text>

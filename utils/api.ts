@@ -54,7 +54,17 @@ export const generateFallbackResponse = (messages: Message[]): AIResponse => {
     };
 };
 
-export const getAIResponse = async (messages: Message[]): Promise<AIResponse> => {
+export async function getAIResponse(
+    messages: Message[],
+    { simulateFlaky = false }: { simulateFlaky?: boolean } = {}
+) {
+    // Simulate network delay
+    await new Promise(res => setTimeout(res, 1200 + Math.random() * 1200));
+
+    if (simulateFlaky && Math.random() < 0.3) { // 30% chance to fail
+        throw new Error('Network error: Simulated flaky network');
+    }
+
     try {
         console.log('==== API REQUEST STARTED ====');
         console.log('Messages to process:', messages.length);
@@ -165,4 +175,4 @@ export const getAIResponse = async (messages: Message[]): Promise<AIResponse> =>
         console.log('Generated fallback response after exception:', fallbackResponse.content.substring(0, 50));
         return fallbackResponse;
     }
-};
+}

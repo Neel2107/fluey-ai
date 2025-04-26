@@ -34,12 +34,6 @@ export default function Index() {
   const handleInputChange = (text: string) => {
     setInputText(text);
   };
-  const { height, progress } = useKeyboardAnimation();
-
-  const scale = progress.interpolate({
-    inputRange: [0, 1],
-    outputRange: [1, 2],
-  });
 
   const handleSubmit = () => {
     if (inputText.trim()) {
