@@ -1,14 +1,14 @@
+import { BottomSheetBackdrop, BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
+import { Trash2 } from 'lucide-react-native';
 import React, { useCallback } from 'react';
 import {
-  View,
+  Alert,
   Text,
   TouchableOpacity,
-  Alert,
+  View,
 } from 'react-native';
-import { BottomSheetModal, BottomSheetBackdrop, BottomSheetView } from '@gorhom/bottom-sheet';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import CustomSwitch from './CustomSwitch';
-import { Trash2 } from 'lucide-react-native';
 
 interface CustomBottomSheetProps {
   bottomSheetModalRef: React.RefObject<BottomSheetModal>;
@@ -32,17 +32,16 @@ const CustomBottomSheet: React.FC<CustomBottomSheetProps> = ({
   toggleApiInfo,
   useApiResponse,
   toggleUseApiResponse,
-  clearMessages,
   deleteChat,
   apiInfo
 }) => {
   const snapPoints = React.useMemo(() => ['40%'], []);
   const insets = useSafeAreaInsets();
-  
+
   const handleSheetChanges = useCallback((index: number) => {
     console.log('handleSheetChanges', index);
   }, []);
-  
+
   const renderBackdrop = useCallback(
     (props: any) => (
       <BottomSheetBackdrop
@@ -55,32 +54,10 @@ const CustomBottomSheet: React.FC<CustomBottomSheetProps> = ({
     []
   );
 
-  const handleClearChat = useCallback(() => {
-    if (!clearMessages) return;
-    
-    Alert.alert(
-      "Clear Chat",
-      "Are you sure you want to clear all messages?",
-      [
-        {
-          text: "Cancel",
-          style: "cancel"
-        },
-        {
-          text: "Clear",
-          style: "destructive",
-          onPress: () => {
-            clearMessages();
-            bottomSheetModalRef.current?.close();
-          }
-        }
-      ]
-    );
-  }, [clearMessages, bottomSheetModalRef]);
 
   const handleDeleteChat = useCallback(() => {
     if (!deleteChat) return;
-    
+
     Alert.alert(
       "Delete Chat",
       "Are you sure you want to delete this chat?",
@@ -114,7 +91,7 @@ const CustomBottomSheet: React.FC<CustomBottomSheetProps> = ({
     >
       <BottomSheetView className="flex-1 p-4" style={{ paddingBottom: insets.bottom }}>
         <Text className="text-xl font-bold text-white mb-6">Settings</Text>
-        
+
         <View className="flex-row justify-between items-center mb-4">
           <Text className="text-base text-white">Show API Info</Text>
           <CustomSwitch
@@ -122,7 +99,7 @@ const CustomBottomSheet: React.FC<CustomBottomSheetProps> = ({
             onValueChange={toggleApiInfo}
           />
         </View>
-        
+
         <View className="flex-row justify-between items-center mb-4">
           <Text className="text-base text-white">Use API Response</Text>
           <CustomSwitch
@@ -130,8 +107,8 @@ const CustomBottomSheet: React.FC<CustomBottomSheetProps> = ({
             onValueChange={toggleUseApiResponse}
           />
         </View>
-        
-        {clearMessages && (
+
+        {/* {clearMessages && (
           <TouchableOpacity 
             className="flex-row items-center bg-zinc-800 p-3 rounded-lg my-2"
             onPress={handleClearChat}
@@ -140,19 +117,19 @@ const CustomBottomSheet: React.FC<CustomBottomSheetProps> = ({
             <Trash2 size={20} color="#FF4545" />
             <Text className="text-red-500 text-base font-medium ml-3">Clear Chat History</Text>
           </TouchableOpacity>
-        )}
+        )} */}
 
-        {deleteChat && (
-          <TouchableOpacity 
-            className="flex-row items-center bg-[#3A1A1A] p-3 rounded-lg my-2"
+        <View className="flex-row justify-between items-center mb-4">
+          <Text className="text-base text-white">Delete Chat</Text>
+          <TouchableOpacity
+            className="p-2"
             onPress={handleDeleteChat}
             activeOpacity={0.7}
           >
             <Trash2 size={20} color="#FF4545" />
-            <Text className="text-red-500 text-base font-medium ml-3">Delete Chat</Text>
           </TouchableOpacity>
-        )}
-        
+        </View>
+
         {showApiInfo && apiInfo && (
           <View className="mt-6 p-4 bg-zinc-800 rounded-lg">
             <Text className="text-base font-bold text-white mb-2">API Information</Text>

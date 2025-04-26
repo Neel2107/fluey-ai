@@ -3,7 +3,9 @@ import { Slot } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from "react";
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { View } from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import "../global.css";
 
 // Prevent the splash screen from auto-hiding
@@ -28,8 +30,17 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <StatusBar style="light" backgroundColor="#18181b" />
-      <Slot />
+      <BottomSheetModalProvider>
+        <View style={{ flex: 1, backgroundColor: "#18181b" }}>
+          <StatusBar style="light" backgroundColor="#18181b" />
+          <Slot screenOptions={{
+            headerStyle: {
+              backgroundColor: "#18181b",
+            },
+            BackgroundColor: "#18181b",
+          }} />
+        </View>
+      </BottomSheetModalProvider>
     </GestureHandlerRootView>
   );
 }

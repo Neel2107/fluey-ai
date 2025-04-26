@@ -3,15 +3,22 @@ import { clearMessages } from '@/utils/storage';
 import { format } from 'date-fns';
 import { router } from 'expo-router';
 import { MessageSquare, Plus, Search, Trash2 } from 'lucide-react-native';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import { Alert, FlatList, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 interface ChatHistoryDrawerProps {
   [key: string]: any;
+  onDrawerStateChanged?: (isOpen: boolean) => void;
 }
 
 const ChatHistoryDrawer: React.FC<ChatHistoryDrawerProps> = (props) => {
+  const { onDrawerStateChanged } = props;
+  
+  useEffect(() => {
+    onDrawerStateChanged?.(true);
+    return () => onDrawerStateChanged?.(false);
+  }, [onDrawerStateChanged]);
   const { sessions, createSession, deleteSession } = useChatStore();
   const [searchQuery, setSearchQuery] = useState('');
 

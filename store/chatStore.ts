@@ -20,11 +20,9 @@ interface ChatState {
   
   // Actions
   createSession: (initialMessage?: string) => string;
-  getSession: (sessionId: string) => ChatSession | undefined;
   updateSession: (sessionId: string, messages: Message[]) => void;
   deleteSession: (sessionId: string) => void;
   setActiveSession: (sessionId: string) => void;
-  addMessageToSession: (sessionId: string, text: string, isUser: boolean) => void;
   updateSessionTitle: (sessionId: string, title: string) => void;
   clearAllSessions: () => void;
 }
@@ -83,10 +81,6 @@ export const useChatStore = create<ChatState>()(
         return id;
       },
       
-      getSession: (sessionId) => {
-        return get().sessions.find(session => session.id === sessionId);
-      },
-      
       updateSession: (sessionId, messages) => {
         set((state) => ({
           sessions: state.sessions.map(session => 
@@ -113,26 +107,6 @@ export const useChatStore = create<ChatState>()(
       
       setActiveSession: (sessionId) => {
         set({ activeSessionId: sessionId });
-      },
-      
-      addMessageToSession: (sessionId, text, isUser) => {
-        const session = get().getSession(sessionId);
-        if (!session) return;
-        
-        const newMessage: Message = {
-          id: generateMessageId(),
-          text,
-          isUser,
-          isStreaming: false,
-        };
-        
-        const updatedMessages = [...session.messages, newMessage];
-        get().updateSession(sessionId, updatedMessages);
-        
-        // Update title if this is the first user message
-        if (isUser && session.messages.length === 0) {
-          get().updateSessionTitle(sessionId, generateTitle(text));
-        }
       },
       
       updateSessionTitle: (sessionId, title) => {

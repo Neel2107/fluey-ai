@@ -15,6 +15,7 @@ import { Menu } from 'lucide-react-native';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, FlatList, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { AnimatedScreenContainer } from '../_layout';
 
 export default function Chat() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -27,9 +28,7 @@ export default function Chat() {
 
   // Get chat session from store
   const {
-    getSession,
     updateSession,
-    addMessageToSession,
     deleteSession
   } = useChatStore();
 
@@ -232,6 +231,10 @@ export default function Chat() {
   }
 
   return (
+    <AnimatedScreenContainer
+    >
+
+
     <SafeAreaView className="flex-1 bg-zinc-900">
       <BottomSheetModalProvider>
         <StatusBar style="light" />
@@ -290,5 +293,6 @@ export default function Chat() {
         />
       </BottomSheetModalProvider>
     </SafeAreaView>
+    </AnimatedScreenContainer>
   );
 }

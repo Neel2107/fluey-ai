@@ -1,18 +1,56 @@
-import { Drawer } from 'expo-router/drawer';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import ChatHistoryDrawer from '@/components/Drawer/ChatHistoryDrawer';
-import { useColorScheme, StyleSheet } from 'react-native';
-import { DrawerContentComponentProps } from '@react-navigation/drawer';
+import { DrawerContentComponentProps, useDrawerProgress } from '@react-navigation/drawer';
+import { Drawer } from 'expo-router/drawer';
+import { StatusBar } from 'expo-status-bar';
+import { useColorScheme } from 'react-native';
+import Animated, {
+  interpolate,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring
+} from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+export function AnimatedScreenContainer({ children }: { children: React.ReactNode }) {
+  const drawerProgress = useDrawerProgress();
 
+  const animatedStyle = useAnimatedStyle(() => {
+    const scale = interpolate(
+      drawerProgress.value,
+      [0, 1],
+      [1, 0.95]
+    );
+
+    return {
+      flex: 1,
+      backgroundColor: '#18181b',
+      borderRadius: interpolate(drawerProgress.value, [0, 1], [0, 10]),
+      overflow: 'hidden',
+      transform: [{ scale }],
+      elevation: 5,
+    };
+  });
+
+  return (
+    <Animated.View style={[{ flex: 1, backgroundColor: '#18181b' }, animatedStyle]}>
+      {children}
+    </Animated.View>
+  );
+}
 export default function DrawerLayout() {
   const insets = useSafeAreaInsets();
   const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const scale = useSharedValue(1);
+
+  const onDrawerStateChanged = (isOpen: boolean) => {
+    scale.value = withSpring(isOpen ? 0.9 : 1, {
+      damping: 15,
+      stiffness: 100
+    });
+  };
+
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
+    <>
       <StatusBar style="light" backgroundColor="#18181b" />
       <Drawer
         defaultStatus="closed"
@@ -24,17 +62,15 @@ export default function DrawerLayout() {
           },
           drawerType: 'front',
           overlayColor: 'rgba(0, 0, 0, 0.7)',
-          // @ts-ignore - sceneContainerStyle exists but TypeScript doesn't recognize it
-          sceneContainerStyle: {
-            backgroundColor: '#18181b',
-          },
           drawerContentStyle: {
             paddingTop: insets.top,
           },
           drawerActiveTintColor: '#ffffff',
           drawerInactiveTintColor: '#a1a1aa',
         }}
-        drawerContent={(props: DrawerContentComponentProps) => <ChatHistoryDrawer {...props} />}
+        drawerContent={(props: DrawerContentComponentProps) => (
+          <ChatHistoryDrawer {...props} onDrawerStateChanged={onDrawerStateChanged} />
+        )}
       >
         <Drawer.Screen
           name="index"
@@ -51,6 +87,6 @@ export default function DrawerLayout() {
           }}
         />
       </Drawer>
-    </GestureHandlerRootView>
+    </>
   );
 }
