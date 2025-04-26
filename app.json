@@ -9,14 +9,20 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.flueyai.app",
+      "icon": "./assets/images/fluey-logo.png",
+      "backgroundColor": "#18181b",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/fluey-logo.png",
         "backgroundColor": "#18181b"
       },
-    "newArchEnabled": false,
+      "newArchEnabled": false,
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO"
@@ -52,14 +58,15 @@
         {
           "photosPermission": "The app needs access to your photos to set your profile picture."
         }
-      ],[
+      ],
+      [
         "react-native-edge-to-edge",
         {
           "android": {
             "parentTheme": "System",
             "enforceNavigationBarContrast": false
           }
-        } 
+        }
       ]
     ],
     "experiments": {

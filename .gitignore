@@ -39,3 +39,4 @@ yarn-error.*
 
 *.apk
 *.abb
+*.gz
