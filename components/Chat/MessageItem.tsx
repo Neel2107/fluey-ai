@@ -1,12 +1,13 @@
 import { Message } from '@/types/chat';
 import React from 'react';
-import { Text } from 'react-native';
+import { Text, View } from 'react-native';
 import MathView from 'react-native-math-view';
 import Animated, {
     FadeIn,
     FadeInRight,
     LinearTransition
 } from 'react-native-reanimated';
+import { Skeleton } from '../Common/Skeleton';
 import { MarkdownRenderer } from './MarkdownRenderer';
 
 const containsMarkdown = (text: string): boolean => {
@@ -37,6 +38,18 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message }) => {
         /^\$\$.*?\$\$$/.test(message.text.trim());
 
     const renderContent = () => {
+        
+
+        if (message.isStreaming) {
+            return (
+                <View style={{ flexDirection: 'column', gap: 6 }}>
+                    <Skeleton width={160} height={14} />
+                    <Skeleton width={120} height={14} />
+                    <Skeleton width={80} height={14} />
+                </View>
+            );
+        }
+
         // For math expressions
         if (isMathExpression) {
             return (
@@ -72,9 +85,10 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message }) => {
                 className={`p-3 rounded-2xl ${message.isUser
                     ? 'bg-zinc-800 rounded-tr-none'
                     : 'bg-zinc-700 rounded-tl-none'}`}
-                style={{
-                    maxWidth: '80%',
-                }}
+                    style={{
+                        minWidth: message.isStreaming ? 200 : 'auto',
+                        maxWidth: '80%'
+                    }}
             >
                 {renderContent()}
             </Animated.View>
