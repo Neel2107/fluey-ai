@@ -38,7 +38,6 @@ export function AnimatedScreenContainer({ children }: { children: React.ReactNod
 }
 export default function DrawerLayout() {
   const insets = useSafeAreaInsets();
-  const colorScheme = useColorScheme();
   const scale = useSharedValue(1);
 
   const onDrawerStateChanged = (isOpen: boolean) => {

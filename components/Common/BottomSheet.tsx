@@ -1,11 +1,11 @@
 import { BottomSheetBackdrop, BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
 import { Trash2 } from 'lucide-react-native';
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import {
-    Alert,
-    Text,
-    TouchableOpacity,
-    View,
+  Alert,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import CustomSwitch from './CustomSwitch';
@@ -28,12 +28,8 @@ const CustomBottomSheet: React.FC<CustomBottomSheetProps> = ({
   forceNextFail,
   setForceNextFail
 }) => {
-  const snapPoints = React.useMemo(() => ['40%'], []);
+  const snapPoints = useMemo(() => ['40%', '85%'], []);
   const insets = useSafeAreaInsets();
-
-  const handleSheetChanges = useCallback((index: number) => {
-    console.log('handleSheetChanges', index);
-  }, []);
 
   const renderBackdrop = useCallback(
     (props: any) => (
@@ -46,7 +42,6 @@ const CustomBottomSheet: React.FC<CustomBottomSheetProps> = ({
     ),
     []
   );
-
 
   const handleDeleteChat = useCallback(() => {
     if (!deleteChat) return;
@@ -71,12 +66,15 @@ const CustomBottomSheet: React.FC<CustomBottomSheetProps> = ({
     );
   }, [deleteChat, bottomSheetModalRef]);
 
+  const handleForceNextFail = useCallback(() => {
+    setForceNextFail && setForceNextFail(!forceNextFail);
+  }, [forceNextFail, setForceNextFail]);
+
   return (
     <BottomSheetModal
       ref={bottomSheetModalRef}
       index={0}
       snapPoints={snapPoints}
-      onChange={handleSheetChanges}
       enablePanDownToClose={true}
       handleIndicatorStyle={{ backgroundColor: '#555555', width: 40 }}
       backdropComponent={renderBackdrop}
@@ -85,30 +83,27 @@ const CustomBottomSheet: React.FC<CustomBottomSheetProps> = ({
       <BottomSheetView className="flex-1 p-4" style={{ paddingBottom: insets.bottom }}>
         <Text className="text-xl font-bold text-white mb-6">Settings</Text>
 
-        <View className="flex-row justify-between items-center mb-4">
+        <TouchableOpacity
+          onPress={toggleUseApiResponse}
+          activeOpacity={0.7}
+          className="flex-row justify-between items-center mb-4">
           <Text className="text-base text-white">Use API Response</Text>
           <CustomSwitch
             value={useApiResponse}
             onValueChange={toggleUseApiResponse}
           />
-        </View>
+        </TouchableOpacity>
 
-        <View className="flex-row justify-between items-center mb-4">
+        <TouchableOpacity
+          onPress={handleForceNextFail}
+          activeOpacity={0.7}
+          className="flex-row justify-between items-center mb-4">
           <Text className="text-base text-white">Force Next Message to Fail</Text>
-          <TouchableOpacity
-            onPress={() => setForceNextFail && setForceNextFail(!forceNextFail)}
-            style={{
-              padding: 12,
-              backgroundColor: forceNextFail ? '#ef4444' : '#444',
-              borderRadius: 8,
-              marginLeft: 12,
-            }}
-          >
-            <Text style={{ color: 'white', textAlign: 'center' }}>
-              {forceNextFail ? 'ON' : 'OFF'}
-            </Text>
-          </TouchableOpacity>
-        </View>
+          <CustomSwitch
+            value={forceNextFail || false}
+            onValueChange={(value) => setForceNextFail && setForceNextFail(value)}
+          />
+        </TouchableOpacity>
 
         <View className="flex-row justify-between items-center mb-4">
           <Text className="text-base text-white">Delete Chat</Text>

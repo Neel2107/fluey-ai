@@ -112,6 +112,7 @@ const ChatHistoryDrawer: React.FC<ChatHistoryDrawerProps> = (props) => {
       ) : (
         <FlatList
           data={filteredSessions}
+          showsVerticalScrollIndicator={false}
           keyExtractor={(item) => item.id}
           contentContainerStyle={{ paddingHorizontal: 16 }}
           renderItem={({ item }) => (

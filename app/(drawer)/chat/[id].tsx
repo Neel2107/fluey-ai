@@ -13,7 +13,7 @@ import { useLocalSearchParams, useNavigation } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Menu } from 'lucide-react-native';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Alert, FlatList, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, FlatList, Keyboard, Text, TouchableOpacity, View } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AnimatedScreenContainer } from '../_layout';
@@ -104,7 +104,7 @@ const ChatScreen = () => {
 
             console.log('Updating messages state with AI response');
             // Update the streaming message with the actual content
-            setMessages(prev => prev.map(msg => 
+            setMessages(prev => prev.map(msg =>
               msg.id === streamingMessage.id ? aiMessage : msg
             ));
 
@@ -172,6 +172,7 @@ const ChatScreen = () => {
 
   const toggleBottomSheet = useCallback(() => {
     if (bottomSheetModalRef.current) {
+      Keyboard.dismiss();
       bottomSheetModalRef.current.present();
     }
   }, []);

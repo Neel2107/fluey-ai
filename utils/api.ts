@@ -61,7 +61,7 @@ export async function getAIResponse(
     // Simulate network delay
     await new Promise(res => setTimeout(res, 1200 + Math.random() * 1200));
 
-    if (simulateFlaky && Math.random() < 0.3) { // 30% chance to fail
+    if (simulateFlaky) { 
         throw new Error('Network error: Simulated flaky network');
     }
 

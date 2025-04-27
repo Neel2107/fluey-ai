@@ -1,14 +1,9 @@
 import { Message } from '@/types/chat';
-import { AIResponse, getAIResponse } from '@/utils/api';
+import { getAIResponse } from '@/utils/api';
 import { generateMessageId } from '@/utils/messageUtils';
 import { loadMessages, saveMessages } from '@/utils/storage';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-// Define character type for better type safety
-interface Character {
-    text: string;
-    id: number;
-}
 
 const NORMAL_RESPONSES = [
     "I'm here to help! What would you like to know?",
@@ -165,7 +160,8 @@ export const useChat = (initialMessages: Message[] = []) => {
                         id: responseId,
                         text: '',
                         isUser: false,
-                        isStreaming: true
+                        isStreaming: true,
+                        failed: false
                     }]);
 
                     // Get current messages including the user message we just added
@@ -206,13 +202,14 @@ export const useChat = (initialMessages: Message[] = []) => {
                 }
             } catch (error) {
                 console.error('Error getting AI response:', error);
-                // Add error message
-                setMessages(prev => [...prev, {
-                    id: generateMessageId(),
-                    text: "I'm sorry, I encountered an error. Please try again.",
-                    isUser: false,
-                    isStreaming: false
-                }]);
+                // Update the streaming message to show error state
+                if (currentStreamingIdRef.current) {
+                    setMessages(prev => prev.map(msg =>
+                        msg.id === currentStreamingIdRef.current
+                            ? { ...msg, failed: true, isStreaming: false }
+                            : msg
+                    ));
+                }
             } finally {
                 setIsStreaming(false);
                 isStreamingRef.current = false;

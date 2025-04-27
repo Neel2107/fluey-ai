@@ -1,4 +1,5 @@
 import { Message } from '@/types/chat';
+import { AlertCircle, RotateCcw } from 'lucide-react-native';
 import React from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 import MathView from 'react-native-math-view';
@@ -39,16 +40,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message, onRetry }) =>
         /^\$\$.*?\$\$/.test(message.text.trim());
 
     const renderContent = () => {
-        if (message.failed) {
-            return (
-                <View style={{ alignItems: 'center' }}>
-                    <Text style={{ color: 'red', marginBottom: 8 }}>Failed to load. Check your connection.</Text>
-                    <TouchableOpacity onPress={() => onRetry?.(message.id)} style={{ padding: 8, backgroundColor: '#444', borderRadius: 6 }}>
-                        <Text style={{ color: 'white' }}>Retry</Text>
-                    </TouchableOpacity>
-                </View>
-            );
-        }
+
 
         if (message.isStreaming) {
             return (
@@ -88,20 +80,33 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message, onRetry }) =>
             layout={LinearTransition.damping(14)}
             className={`mb-4 flex ${message.isUser ? 'items-end' : 'items-start'}`}
         >
-            <Animated.View
-                entering={message.isUser
-                    ? FadeInRight.damping(12)
-                    : FadeIn.duration(500)}
-                className={`p-3 rounded-2xl ${message.isUser
-                    ? 'bg-zinc-800 rounded-tr-none'
-                    : 'bg-zinc-700 rounded-tl-none'}`}
+            {message.failed ?
+                <View className="flex-row items-center  px-4 py-3 border border-[#392610] bg-[#2A2520] max-w-[80%] rounded-2xl">
+                    <AlertCircle color="#FF6B00" size={20} />
+                    <Text className="text-[#EA702D] ml-3 flex-1">
+                        Hmm... something seems to have gone wrong.
+                    </Text>
+                    <TouchableOpacity
+                        onPress={() => onRetry?.(message.id)}
+                        className="ml-2"
+                    >
+                        <RotateCcw color="#EA702D" size={20} />
+                    </TouchableOpacity>
+                </View> : <Animated.View
+                    entering={message.isUser
+                        ? FadeInRight.damping(12)
+                        : FadeIn.duration(500)}
+                    className={`p-3 rounded-2xl ${message.isUser
+                        ? 'bg-zinc-800 rounded-tr-none'
+                        : 'bg-zinc-700 rounded-tl-none'}`}
                     style={{
-                        minWidth: message.isStreaming ? 200 : 'auto',
+                        minWidth: message.isStreaming && !message.failed ? 200 : 'auto',
                         maxWidth: '80%'
                     }}
-            >
-                {renderContent()}
-            </Animated.View>
+                >
+                    {renderContent()}
+                </Animated.View>}
+
         </Animated.View>
     );
 };
