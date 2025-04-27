@@ -9,11 +9,12 @@ import { getAIResponse } from '@/utils/api';
 import { generateMessageId } from '@/utils/messageUtils';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { DrawerNavigationProp } from '@react-navigation/drawer';
+import { FlashList } from '@shopify/flash-list';
 import { useLocalSearchParams, useNavigation } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Menu } from 'lucide-react-native';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Alert, FlatList, Keyboard, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Keyboard, Text, TouchableOpacity, View } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AnimatedScreenContainer } from '../_layout';
@@ -21,7 +22,7 @@ import { AnimatedScreenContainer } from '../_layout';
 const ChatScreen = () => {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [inputText, setInputText] = useState("");
-  const flatListRef = useRef<FlatList>(null);
+  const listRef = useRef<FlashList<Message>>(null);
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
   const navigation = useNavigation<DrawerNavigationProp<any>>();
   const processingInitialMessage = useRef(false);
@@ -154,6 +155,13 @@ const ChatScreen = () => {
   useEffect(() => {
     if (id && messages.length > 0) {
       updateSession(id, messages);
+      
+          // Auto-scroll to bottom when messages update
+      if (messages.length > 0) {
+        setTimeout(() => {
+          listRef.current?.scrollToEnd({ animated: false });
+        }, 10);
+      }
     }
   }, [id, messages, updateSession]);
 
@@ -161,11 +169,38 @@ const ChatScreen = () => {
     setInputText(text);
   }, []);
 
+  // Memoize the key extractor
+  const keyExtractor = useCallback((item: Message) => item.id, []);
+  
+  // Add a dedicated effect to handle scrolling during streaming
+  useEffect(() => {
+    // Check if any message is currently streaming
+    const streamingMessage = messages.find(msg => msg.isStreaming);
+    
+    if (streamingMessage) {
+      // Create an interval to scroll while streaming is active
+      const scrollInterval = setInterval(() => {
+        if (listRef.current) {
+          listRef.current.scrollToEnd({ animated: false });
+        }
+      }, 300); // Check every 300ms
+      
+      // Clean up interval when streaming stops
+      return () => clearInterval(scrollInterval);
+    }
+  }, [messages]);
+
   const handleSubmit = useCallback(async () => {
     if (inputText.trim() && !isStreaming && id) {
       await addMessage(inputText.trim(), true, forceNextFail);
-      setInputText("");
-      flatListRef.current?.scrollToEnd({ animated: true });
+      setInputText('');
+      Keyboard.dismiss();
+
+      // Ensure we scroll to the bottom after adding a new message
+      setTimeout(() => {
+        listRef.current?.scrollToEnd({ animated: true });
+      }, 100);
+
       if (forceNextFail) setForceNextFail(false);
     }
   }, [inputText, isStreaming, addMessage, id, forceNextFail]);
@@ -295,20 +330,44 @@ const ChatScreen = () => {
             </View>
           </View>
 
-          <View className="flex-1">
-            <FlatList
-              ref={flatListRef}
+          <View className="flex-1" style={{ flex: 1 }}>
+            <FlashList
+              ref={listRef}
               data={messages}
-              keyExtractor={item => item.id}
+              keyExtractor={keyExtractor}
               renderItem={({ item }) => (
-                <MessageItem message={item} onRetry={handleRetry} />
+                <View className="px-4">
+                  <MessageItem message={item} onRetry={handleRetry} />
+                </View>
               )}
-              onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
-              className="flex-1 px-4"
-              windowSize={5} // Add this to optimize rendering window
-              maxToRenderPerBatch={10} // Limit batch rendering
-              removeClippedSubviews={true} // Remove items outside viewport
-              initialNumToRender={10} // Reduce initial render batch
+              onContentSizeChange={() => {
+                // Only use animated scrolling when not streaming for better performance
+                const isCurrentlyStreaming = messages.some(msg => msg.isStreaming);
+                listRef.current?.scrollToEnd({ animated: !isCurrentlyStreaming });
+              }}
+              estimatedItemSize={100}
+              estimatedListSize={{ height: 500, width: 400 }}
+              className="flex-1"
+              drawDistance={200}
+              overrideItemLayout={(layout, item) => {
+                // Optimize layout calculation for different message types
+                if (item.isUser) {
+                  // User messages are typically shorter
+                  layout.size = Math.max(50, item.text.length / 5);
+                } else if (item.isStreaming) {
+                  // Streaming messages have a fixed height for the skeleton
+                  layout.size = 80;
+                } else {
+                  // AI messages can be longer and more complex
+                  layout.size = Math.max(80, item.text.length / 3);
+                }
+              }}
+              viewabilityConfig={{
+                minimumViewTime: 100,
+                viewAreaCoveragePercentThreshold: 20,
+              }}
+              initialScrollIndex={messages.length > 0 ? messages.length - 1 : undefined}
+              maintainVisibleContentPosition={{ minIndexForVisible: 0 }}
             />
             <ChatInput
               inputText={inputText}

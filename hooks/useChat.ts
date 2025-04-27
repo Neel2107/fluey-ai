@@ -194,11 +194,15 @@ export const useChat = (initialMessages: Message[] = []) => {
                             
                             console.log(`Streaming update: ${i}/${fullResponse.length} characters`);
                             
+                                    // Update message with current text
                             setMessages(prev => prev.map(msg =>
                                 msg.id === responseId
                                     ? { ...msg, text: currentText }
                                     : msg
                             ));
+                            
+                            // Add a small delay to allow rendering
+                            await new Promise(resolve => setTimeout(resolve, 5));
                         }
                     } catch (streamError) {
                         console.error('Error during streaming:', streamError);
