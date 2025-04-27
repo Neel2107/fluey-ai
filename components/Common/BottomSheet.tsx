@@ -14,7 +14,6 @@ interface CustomBottomSheetProps {
   bottomSheetModalRef: React.RefObject<BottomSheetModal>;
   useApiResponse: boolean;
   toggleUseApiResponse: () => void;
-  clearMessages?: () => void;
   deleteChat?: () => void;
   forceNextFail?: boolean;
   setForceNextFail?: (v: boolean) => void;

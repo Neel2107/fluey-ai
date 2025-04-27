@@ -2,11 +2,8 @@ import { MessageItem } from '@/components/Chat/MessageItem';
 import CustomBottomSheet from '@/components/Common/BottomSheet';
 import HamburgerMenu from '@/components/Common/HamburgerMenu';
 import ChatInput from '@/components/Home/ChatInput';
-import { useChat } from '@/hooks/useChat';
-import { useChatStore } from '@/store/chatStore';
+import { useChatSession } from '@/hooks/useChatSession';
 import { Message } from '@/types/chat';
-import { getAIResponse } from '@/utils/api';
-import { generateMessageId } from '@/utils/messageUtils';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { DrawerNavigationProp } from '@react-navigation/drawer';
 import { FlashList } from '@shopify/flash-list';
@@ -25,145 +22,46 @@ const ChatScreen = () => {
   const listRef = useRef<FlashList<Message>>(null);
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
   const navigation = useNavigation<DrawerNavigationProp<any>>();
-  const processingInitialMessage = useRef(false);
   const [forceNextFail, setForceNextFail] = useState(false);
 
-  // Get chat session from store
+  // Use our new chat session hook to manage all chat state
   const {
-    updateSession,
-    deleteSession
-  } = useChatStore();
-
-  const session = useChatStore(state =>
-    state.sessions.find(s => s.id === id)
-  );
-
-  // Initialize chat hook with session messages
-  const {
+    session,
     messages,
-    setMessages,
     isStreaming,
-    addMessage,
-    useApiResponse,
-    toggleUseApiResponse,
+    sendMessage,
+    deleteSession,
     clearMessages,
-    setIsStreaming,
-  } = useChat(session?.messages || []);
+    toggleUseApiResponse,
+    useApiResponse,
+    handleRetry
+  } = useChatSession(id);
 
-  // Process initial message if needed
+  // Auto-scroll to bottom when messages update
   useEffect(() => {
-    const processInitialMessage = async () => {
-      // Only process if we have a session with exactly one user message
-      // and we're not already processing
-      if (session &&
-        session.messages.length === 1 &&
-        session.messages[0].isUser &&
-        !processingInitialMessage.current) {
-
-        processingInitialMessage.current = true;
-        console.log('New session with initial message detected - WILL PROCESS');
-
-        const streamingMessage: Message = {
-          id: generateMessageId(),
-          text: '',
-          isUser: false,
-          isStreaming: true
-        };
-
-        try {
-          // Add a streaming message first
-          setMessages(prev => [...prev, streamingMessage]);
-
-          // Manually trigger the API response
-          console.log('Setting isStreaming to true');
-          setIsStreaming(true);
-
-          // Get the user message
-          const userMessage = session.messages[0].text;
-          console.log('Initial user message to process:', userMessage);
-
-          // Call the API directly - use the imported function
-          console.log('Calling getAIResponse with session messages');
-          const apiResponse = await getAIResponse([{
-            id: session.messages[0].id,
-            text: userMessage,
-            isUser: true,
-            isStreaming: false
-          }]);
-
-          console.log('API response received:', apiResponse ? 'success' : 'null');
-
-          if (apiResponse) {
-            console.log('Creating AI message with response content');
-            // Create a new AI message
-            const aiMessage: Message = {
-              id: streamingMessage.id, // Use the same ID as the streaming message
-              text: apiResponse.content,
-              isUser: false,
-              isStreaming: false
-            };
-
-            console.log('Updating messages state with AI response');
-            // Update the streaming message with the actual content
-            setMessages(prev => prev.map(msg =>
-              msg.id === streamingMessage.id ? aiMessage : msg
-            ));
-
-            console.log('Updating lastApiResponse state');
-            // Update the lastApiResponse state
-
-            console.log('Updating session in store');
-            // Update the session in the store
-            if (id) {
-              const updatedMessages = [...session.messages, aiMessage];
-              console.log('Updating session with messages count:', updatedMessages.length);
-              updateSession(id, updatedMessages);
-            }
-          } else {
-            console.error('API response was null or undefined');
-            // Remove the streaming message if API call failed
-            setMessages(prev => prev.filter(msg => msg.id !== streamingMessage.id));
-          }
-        } catch (error) {
-          console.error('Error generating initial response:', error);
-          // Remove the streaming message if there was an error
-          setMessages(prev => prev.filter(msg => msg.id !== streamingMessage.id));
-        } finally {
-          console.log('Setting isStreaming to false');
-          setIsStreaming(false);
-          processingInitialMessage.current = false;
-        }
-      } else {
-        if (processingInitialMessage.current) {
-          console.log('Initial message already processed, skipping');
-        } else if (!session) {
-          console.log('No session available, skipping initial message processing');
-        } else if (session.messages.length !== 1) {
-          console.log('Session has', session.messages.length, 'messages, not processing initial message');
-        } else if (!session.messages[0].isUser) {
-          console.log('First message is not from user, skipping initial message processing');
-        }
-      }
-    };
-
-    if (session && session.messages.length === 1 && session.messages[0].isUser) {
-      processInitialMessage();
+    if (messages.length > 0) {
+      setTimeout(() => {
+        listRef.current?.scrollToEnd({ animated: false });
+      }, 10);
     }
-  }, [session?.messages]);
+  }, [messages.length]);
 
-  // Sync messages back to the store when they change
-  useEffect(() => {
-    if (id && messages.length > 0) {
-      updateSession(id, messages);
-      
-          // Auto-scroll to bottom when messages update
-      if (messages.length > 0) {
+  const handleSubmit = useCallback(async () => {
+    if (inputText.trim() && !isStreaming) {
+      const success = await sendMessage(inputText.trim(), forceNextFail);
+      if (success) {
+        setInputText('');
+        Keyboard.dismiss();
+
+        // Ensure we scroll to the bottom after adding a new message
         setTimeout(() => {
-          listRef.current?.scrollToEnd({ animated: false });
-        }, 10);
+          listRef.current?.scrollToEnd({ animated: true });
+        }, 100);
+
+        if (forceNextFail) setForceNextFail(false);
       }
     }
-  }, [id, messages, updateSession]);
+  }, [sendMessage, forceNextFail, inputText, isStreaming]);
 
   const handleInputChange = useCallback((text: string) => {
     setInputText(text);
@@ -171,7 +69,7 @@ const ChatScreen = () => {
 
   // Memoize the key extractor
   const keyExtractor = useCallback((item: Message) => item.id, []);
-  
+
   // Add a dedicated effect to handle scrolling during streaming
   useEffect(() => {
     // Check if any message is currently streaming
@@ -188,22 +86,7 @@ const ChatScreen = () => {
       // Clean up interval when streaming stops
       return () => clearInterval(scrollInterval);
     }
-  }, [messages]);
-
-  const handleSubmit = useCallback(async () => {
-    if (inputText.trim() && !isStreaming && id) {
-      await addMessage(inputText.trim(), true, forceNextFail);
-      setInputText('');
-      Keyboard.dismiss();
-
-      // Ensure we scroll to the bottom after adding a new message
-      setTimeout(() => {
-        listRef.current?.scrollToEnd({ animated: true });
-      }, 100);
-
-      if (forceNextFail) setForceNextFail(false);
-    }
-  }, [inputText, isStreaming, addMessage, id, forceNextFail]);
+  }, [messages, listRef]);
 
   const toggleBottomSheet = useCallback(() => {
     if (bottomSheetModalRef.current) {
@@ -212,51 +95,28 @@ const ChatScreen = () => {
     }
   }, []);
 
-  const handleClearChat = useCallback(() => {
-    Alert.alert(
-      "Clear Chat",
-      "Are you sure you want to clear all messages in this chat?",
-      [
-        {
-          text: "Cancel",
-          style: "cancel"
-        },
-        {
-          text: "Clear",
-          style: "destructive",
-          onPress: () => {
-            clearMessages();
-            if (id) {
-              updateSession(id, []);
-            }
-          }
-        }
-      ]
-    );
-  }, [clearMessages, id, updateSession]);
-
   const handleDeleteChat = useCallback(() => {
     Alert.alert(
-      "Delete Chat",
-      "Are you sure you want to delete this chat?",
+      'Delete Chat',
+      'Are you sure you want to delete this chat?',
       [
         {
-          text: "Cancel",
-          style: "cancel"
+          text: 'Cancel',
+          style: 'cancel',
         },
         {
-          text: "Delete",
-          style: "destructive",
+          text: 'Delete',
+          style: 'destructive',
           onPress: () => {
-            if (id) {
-              deleteSession(id);
+            const success = deleteSession();
+            if (success) {
               navigation.navigate('index');
             }
-          }
-        }
+          },
+        },
       ]
     );
-  }, [id, deleteSession, navigation]);
+  }, [deleteSession, navigation]);
 
   const openDrawer = useCallback(() => {
     navigation.openDrawer();
@@ -270,32 +130,7 @@ const ChatScreen = () => {
   }, [session, id, navigation]);
 
   // Retry handler for failed messages
-  const handleRetry = async (messageId: string) => {
-    // Mark the failed message as streaming again
-    setMessages(prev => prev.map(m =>
-      m.id === messageId ? { ...m, isStreaming: true, failed: false } : m
-    ));
-    try {
-      setIsStreaming(true);
-      const apiResponse = await getAIResponse([
-        ...messages.filter(m => m.isUser || m.id === messageId)
-      ], { simulateFlaky: forceNextFail });
-      if (apiResponse) {
-        // Replace the failed message with the new AI response
-        setMessages(prev => prev.map(m =>
-          m.id === messageId
-            ? { ...m, text: apiResponse.content, isStreaming: false, failed: false }
-            : m
-        ));
-      }
-    } catch (error) {
-      setMessages(prev => prev.map(m =>
-        m.id === messageId ? { ...m, failed: true, isStreaming: false } : m
-      ));
-    } finally {
-      setIsStreaming(false);
-    }
-  };
+  // This function is now handled in the useChatSession hook
 
   if (!session) {
     return null;
@@ -304,8 +139,6 @@ const ChatScreen = () => {
   return (
     <AnimatedScreenContainer
     >
-
-
       <SafeAreaView className="flex-1 bg-zinc-900">
         <KeyboardAvoidingView className="flex-1" behavior="padding">
 
@@ -381,7 +214,6 @@ const ChatScreen = () => {
           bottomSheetModalRef={bottomSheetModalRef}
           useApiResponse={useApiResponse}
           toggleUseApiResponse={toggleUseApiResponse}
-          clearMessages={handleClearChat}
           deleteChat={handleDeleteChat}
           forceNextFail={forceNextFail}
           setForceNextFail={setForceNextFail}

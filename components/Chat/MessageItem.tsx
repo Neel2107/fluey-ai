@@ -11,6 +11,8 @@ import Animated, {
 import { Skeleton } from '../Common/Skeleton';
 import { MarkdownRenderer } from './MarkdownRenderer';
 
+const AnimatedText = Animated.createAnimatedComponent(Text);
+
 const containsMarkdown = (text: string): boolean => {
     // Check for common Markdown patterns
     const markdownPatterns = [
@@ -50,7 +52,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message, onRetry }) =>
                 </View>
             );
         }
-        
+
         // If we're streaming but have content, show the content that's available so far
 
         // For math expressions
@@ -69,7 +71,9 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message, onRetry }) =>
         }
 
         // For plain text
-        return <Text className="text-white text-lg">{message.text}</Text>;
+        return <AnimatedText
+            entering={FadeIn.duration(100)}
+            className="text-white text-lg">{message.text}</AnimatedText>;
     };
 
     return (
@@ -97,7 +101,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message, onRetry }) =>
                 <Animated.View
                     entering={message.isUser
                         ? FadeInRight.damping(12)
-                        : FadeIn.duration(500)}
+                        : FadeIn.duration(100)}
                     className={`p-3 rounded-2xl ${message.isUser
                         ? 'bg-zinc-800 rounded-tr-none'
                         : ''}`}
