@@ -16,7 +16,7 @@ export const MathService: React.FC<MathServiceProps> = ({ expression, style }) =
   return (
     <View style={[{ backgroundColor: 'transparent' }, style]}>
       <MathJaxSvg
-        fontSize={16}
+        fontSize={18}
         fontCache={true}
         
       >

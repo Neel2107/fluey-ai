@@ -40,8 +40,6 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message, onRetry }) =>
         /^\$\$.*?\$\$/.test(message.text.trim());
 
     const renderContent = () => {
-
-
         if (message.isStreaming) {
             return (
                 <View style={{ flexDirection: 'column', gap: 6 }}>
@@ -68,7 +66,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message, onRetry }) =>
         }
 
         // For plain text
-        return <Text className="text-white text-base">{message.text}</Text>;
+        return <Text className="text-white text-lg">{message.text}</Text>;
     };
 
     return (
@@ -92,16 +90,17 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message, onRetry }) =>
                     >
                         <RotateCcw color="#EA702D" size={20} />
                     </TouchableOpacity>
-                </View> : <Animated.View
+                </View> :
+                <Animated.View
                     entering={message.isUser
                         ? FadeInRight.damping(12)
                         : FadeIn.duration(500)}
                     className={`p-3 rounded-2xl ${message.isUser
                         ? 'bg-zinc-800 rounded-tr-none'
-                        : 'bg-zinc-700 rounded-tl-none'}`}
+                        : ''}`}
                     style={{
                         minWidth: message.isStreaming && !message.failed ? 200 : 'auto',
-                        maxWidth: '80%'
+                        maxWidth: message.isUser ? '80%' : '90%',
                     }}
                 >
                     {renderContent()}

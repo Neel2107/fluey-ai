@@ -87,7 +87,7 @@ const CustomBottomSheet: React.FC<CustomBottomSheetProps> = ({
           onPress={toggleUseApiResponse}
           activeOpacity={0.7}
           className="flex-row justify-between items-center mb-4">
-          <Text className="text-base text-white">Use API Response</Text>
+          <Text className="text-base text-white">Use Gemini</Text>
           <CustomSwitch
             value={useApiResponse}
             onValueChange={toggleUseApiResponse}
