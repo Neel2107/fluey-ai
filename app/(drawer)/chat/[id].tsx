@@ -23,7 +23,6 @@ const ChatScreen = () => {
   const [inputText, setInputText] = useState("");
   const flatListRef = useRef<FlatList>(null);
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
-  const [showApiInfo, setShowApiInfo] = useState(false);
   const navigation = useNavigation<DrawerNavigationProp<any>>();
   const processingInitialMessage = useRef(false);
   const [forceNextFail, setForceNextFail] = useState(false);
@@ -44,12 +43,10 @@ const ChatScreen = () => {
     setMessages,
     isStreaming,
     addMessage,
-    lastApiResponse,
     useApiResponse,
     toggleUseApiResponse,
     clearMessages,
     setIsStreaming,
-    setLastApiResponse
   } = useChat(session?.messages || []);
 
   // Process initial message if needed
@@ -113,7 +110,6 @@ const ChatScreen = () => {
 
             console.log('Updating lastApiResponse state');
             // Update the lastApiResponse state
-            setLastApiResponse(apiResponse);
 
             console.log('Updating session in store');
             // Update the session in the store
@@ -173,10 +169,6 @@ const ChatScreen = () => {
       if (forceNextFail) setForceNextFail(false);
     }
   }, [inputText, isStreaming, addMessage, id, forceNextFail]);
-
-  const toggleApiInfo = useCallback(() => {
-    setShowApiInfo(prev => !prev);
-  }, []);
 
   const toggleBottomSheet = useCallback(() => {
     if (bottomSheetModalRef.current) {
@@ -283,7 +275,7 @@ const ChatScreen = () => {
 
 
           <StatusBar style="light" />
-          <View className="flex-row justify-between items-center p-4 border-b border-zinc-700 mb-2">
+          <View className="flex-row justify-between items-center p-4 pb-2 border-b border-zinc-700 mb-2">
             <View className="flex-row items-center">
               <TouchableOpacity
                 onPress={openDrawer}
@@ -327,18 +319,10 @@ const ChatScreen = () => {
         </KeyboardAvoidingView>
         <CustomBottomSheet
           bottomSheetModalRef={bottomSheetModalRef}
-          showApiInfo={showApiInfo}
-          toggleApiInfo={toggleApiInfo}
           useApiResponse={useApiResponse}
           toggleUseApiResponse={toggleUseApiResponse}
           clearMessages={handleClearChat}
           deleteChat={handleDeleteChat}
-          apiInfo={lastApiResponse ? {
-            model: lastApiResponse.model,
-            provider: lastApiResponse.provider,
-            promptTokens: lastApiResponse.usage.prompt_tokens,
-            completionTokens: lastApiResponse.usage.completion_tokens
-          } : undefined}
           forceNextFail={forceNextFail}
           setForceNextFail={setForceNextFail}
         />

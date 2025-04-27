@@ -45,7 +45,7 @@ export const useChat = (initialMessages: Message[] = []) => {
     const [normalIndex, setNormalIndex] = useState(0);
     const [mathIndex, setMathIndex] = useState(0);
     const [longIndex, setLongIndex] = useState(0);
-    const [lastApiResponse, setLastApiResponse] = useState<AIResponse | null>(null);
+    // const [lastApiResponse, setLastApiResponse] = useState<AIResponse | null>(null);
     const [useApiResponse, setUseApiResponse] = useState(true);
 
     // Update messagesRef when messages change
@@ -171,7 +171,7 @@ export const useChat = (initialMessages: Message[] = []) => {
                     // Get current messages including the user message we just added
                     const currentMessages = [...messagesRef.current, newMessage];
                     const response = await getAIResponse(currentMessages, { simulateFlaky: forceNextFail });
-                    setLastApiResponse(response);
+
 
                     const fullResponse = response.content;
                     const isLongResponse = fullResponse.length > 100;
@@ -245,8 +245,6 @@ export const useChat = (initialMessages: Message[] = []) => {
         isStreaming,
         setIsStreaming,
         addMessage,
-        lastApiResponse,
-        setLastApiResponse,
         useApiResponse,
         toggleUseApiResponse,
         clearMessages

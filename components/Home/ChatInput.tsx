@@ -4,7 +4,7 @@ import {
     Send
 } from "lucide-react-native";
 import React from "react";
-import { TextInput, TouchableOpacity, View } from "react-native";
+import { TextInput, TouchableOpacity, View, Platform } from "react-native";
 
 interface ChatInputProps {
     inputText: string;
@@ -21,7 +21,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
 }) => {
     return (
         <View className="bg-zinc-900 border-t border-zinc-700">
-            <View className="p-4 pt-2">
+            <View className={`p-4 pt-2 ${Platform.OS === 'ios' ? 'pb-8' : ''}`}>
                 <View className="flex-row items-center">
                     <TouchableOpacity className="p-2 mr-2">
                         <Plus color="white" size={24} />

@@ -12,30 +12,19 @@ import CustomSwitch from './CustomSwitch';
 
 interface CustomBottomSheetProps {
   bottomSheetModalRef: React.RefObject<BottomSheetModal>;
-  showApiInfo: boolean;
-  toggleApiInfo: () => void;
   useApiResponse: boolean;
   toggleUseApiResponse: () => void;
   clearMessages?: () => void;
   deleteChat?: () => void;
-  apiInfo?: {
-    model: string;
-    provider: string;
-    promptTokens: number;
-    completionTokens: number;
-  };
   forceNextFail?: boolean;
   setForceNextFail?: (v: boolean) => void;
 }
 
 const CustomBottomSheet: React.FC<CustomBottomSheetProps> = ({
   bottomSheetModalRef,
-  showApiInfo,
-  toggleApiInfo,
   useApiResponse,
   toggleUseApiResponse,
   deleteChat,
-  apiInfo,
   forceNextFail,
   setForceNextFail
 }) => {
@@ -97,14 +86,6 @@ const CustomBottomSheet: React.FC<CustomBottomSheetProps> = ({
         <Text className="text-xl font-bold text-white mb-6">Settings</Text>
 
         <View className="flex-row justify-between items-center mb-4">
-          <Text className="text-base text-white">Show API Info</Text>
-          <CustomSwitch
-            value={showApiInfo}
-            onValueChange={toggleApiInfo}
-          />
-        </View>
-
-        <View className="flex-row justify-between items-center mb-4">
           <Text className="text-base text-white">Use API Response</Text>
           <CustomSwitch
             value={useApiResponse}
@@ -140,16 +121,6 @@ const CustomBottomSheet: React.FC<CustomBottomSheetProps> = ({
           </TouchableOpacity>
         </View>
 
-        {showApiInfo && apiInfo && (
-          <View className="mt-6 p-4 bg-zinc-800 rounded-lg">
-            <Text className="text-base font-bold text-white mb-2">API Information</Text>
-            <Text className="text-sm text-zinc-300 mb-1">Model: {apiInfo.model}</Text>
-            <Text className="text-sm text-zinc-300 mb-1">Provider: {apiInfo.provider}</Text>
-            <Text className="text-sm text-zinc-300">
-              Tokens: {apiInfo.promptTokens} prompt / {apiInfo.completionTokens} completion
-            </Text>
-          </View>
-        )}
       </BottomSheetView>
     </BottomSheetModal>
   );
