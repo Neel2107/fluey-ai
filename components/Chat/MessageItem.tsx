@@ -40,7 +40,8 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message, onRetry }) =>
         /^\$\$.*?\$\$/.test(message.text.trim());
 
     const renderContent = () => {
-        if (message.isStreaming) {
+        // If streaming but we already have some text, show that text instead of skeleton
+        if (message.isStreaming && (!message.text || message.text.length === 0)) {
             return (
                 <View style={{ flexDirection: 'column', gap: 6 }}>
                     <Skeleton width={160} height={14} />
@@ -49,13 +50,15 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message, onRetry }) =>
                 </View>
             );
         }
+        
+        // If we're streaming but have content, show the content that's available so far
 
         // For math expressions
         if (isMathExpression) {
             return (
                 <MathView
                     math={message.text.replace(/^\$|\$$/g, '')}
-                    style={{ backgroundColor: 'transparent' }}
+                    style={{ backgroundColor: 'transparent', color: 'white' }}
                 />
             );
         }

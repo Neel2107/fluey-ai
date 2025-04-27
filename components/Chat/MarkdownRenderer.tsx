@@ -65,7 +65,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) =
                     if (blockMatch) {
                         return (
                             <View style={markdownStyles.mathContainer}>
-                                <MathView math={`\color{white}{${blockMatch[1]}}`} />
+                                <MathView math={`\\color{white}{${blockMatch[1]}}`} />
                             </View>
                         );
                     }

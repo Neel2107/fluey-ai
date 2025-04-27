@@ -1,9 +1,13 @@
 declare module 'react-native-math-view' {
-    import { ViewProps } from 'react-native';
+    import { ViewProps, TextStyle, ViewStyle } from 'react-native';
 
     interface MathViewProps extends ViewProps {
         math: string;
-        style?: ViewProps['style'];
+        style?: ViewStyle | TextStyle | {
+            color?: string;
+            backgroundColor?: string;
+            [key: string]: any;
+        };
     }
 
     const MathView: React.FC<MathViewProps>;

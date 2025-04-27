@@ -18,7 +18,7 @@ export const MathService: React.FC<MathServiceProps> = ({ expression, style }) =
       <MathJaxSvg
         fontSize={18}
         fontCache={true}
-        
+        color={style?.color || 'white'}
       >
         {processedExpression}
       </MathJaxSvg>

@@ -166,25 +166,46 @@ export const useChat = (initialMessages: Message[] = []) => {
 
                     // Get current messages including the user message we just added
                     const currentMessages = [...messagesRef.current, newMessage];
+                    console.log('Fetching AI response...');
                     const response = await getAIResponse(currentMessages, { simulateFlaky: forceNextFail });
+                    console.log('AI response received, length:', response.content.length);
 
+                    // Immediately update with at least some content to avoid showing skeleton indefinitely
+                    setMessages(prev => prev.map(msg =>
+                        msg.id === responseId
+                            ? { ...msg, text: response.content.substring(0, 1) }
+                            : msg
+                    ));
 
                     const fullResponse = response.content;
                     const isLongResponse = fullResponse.length > 100;
                     const baseDelay = isLongResponse ? 5 : 15;
                     const batchSize = isLongResponse ? 15 : 5;
 
-                    let currentText = '';
-                    for (let i = 0; i < fullResponse.length; i += batchSize) {
-                        if (!isStreamingRef.current) break;
-
-                        await new Promise(resolve => setTimeout(resolve, baseDelay));
-                        const endIndex = Math.min(i + batchSize, fullResponse.length);
-                        currentText += fullResponse.substring(i, endIndex);
-
+                    let currentText = fullResponse.substring(0, 1); // Start with the first character we already set
+                    
+                    try {
+                        for (let i = batchSize; i < fullResponse.length; i += batchSize) {
+                            if (!isStreamingRef.current) break;
+                            
+                            await new Promise(resolve => setTimeout(resolve, baseDelay));
+                            const endIndex = Math.min(i + batchSize, fullResponse.length);
+                            currentText += fullResponse.substring(i, endIndex);
+                            
+                            console.log(`Streaming update: ${i}/${fullResponse.length} characters`);
+                            
+                            setMessages(prev => prev.map(msg =>
+                                msg.id === responseId
+                                    ? { ...msg, text: currentText }
+                                    : msg
+                            ));
+                        }
+                    } catch (streamError) {
+                        console.error('Error during streaming:', streamError);
+                        // If streaming fails, at least show the full response
                         setMessages(prev => prev.map(msg =>
                             msg.id === responseId
-                                ? { ...msg, text: currentText }
+                                ? { ...msg, text: fullResponse, isStreaming: false }
                                 : msg
                         ));
                     }
