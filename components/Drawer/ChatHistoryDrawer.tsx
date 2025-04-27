@@ -91,7 +91,7 @@ const ChatHistoryDrawer: React.FC<ChatHistoryDrawerProps> = (props) => {
             />
           </View>
           <TouchableOpacity
-            className="bg-zinc-800 p-3 rounded-lg"
+            className="bg-zinc-800 p-4 rounded-lg"
             onPress={handleNewChat}
             activeOpacity={0.7}
           >
