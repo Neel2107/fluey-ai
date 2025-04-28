@@ -1,50 +1,136 @@
-# Welcome to your Expo app 👋
+# Fluey AI - Modern Chat Interface
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A React Native chat application with modern AI chat features, including streaming responses, markdown rendering, and math support.
 
-## Get started
+## Features
 
-1. Install dependencies
+- 🚀 Smooth transitions between screens
+- 💬 Real-time streaming responses
+- 📝 Markdown and LaTeX math rendering
+- 🎨 Beautiful UI with skeleton loading
+- 🔄 State management with Zustand
+- 💾 Chat session persistence
 
-   ```bash
-   npm install
-   ```
+## Setup Instructions
 
-2. Start the app
-
-   ```bash
-    npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
+1. Clone the repository:
 ```bash
-npm run reset-project
+git clone https://github.com/yourusername/fluey-ai.git
+cd fluey-ai
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+2. Install dependencies:
+```bash
+npm install
+# or
+yarn install
+```
 
-## Learn more
+3. Set up environment variables:
+Create a `.env` file in the root directory with:
+```
+EXPO_PUBLIC_OPENROUTER_API_KEY=your_openrouter_api_key
+EXPO_PUBLIC_GEMINI_API_KEY=your_gemini_api_key
+```
 
-To learn more about developing your project with Expo, look at the following resources:
+4. Start the development server:
+```bash
+npm start
+# or
+yarn start
+```
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## Libraries Used
 
-## Join the community
+### Core Libraries
+- **React Native**: Base framework for building cross-platform mobile applications
+- **Expo**: Development platform for React Native apps
+- **TypeScript**: For type safety and better developer experience
 
-Join our community of developers creating universal apps.
+### UI & Animation
+- **react-native-reanimated**: For smooth animations and transitions
+- **@gorhom/bottom-sheet**: For bottom sheet interactions
+- **@shopify/flash-list**: High-performance list implementation
+- **react-native-markdown-display**: For rendering markdown content
+- **react-native-math-view**: For rendering LaTeX math expressions
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+### State Management
+- **Zustand**: Lightweight state management solution
+- **AsyncStorage**: For persisting chat sessions
+
+### Development Tools
+- **ESLint**: For code linting
+- **Prettier**: For code formatting
+- **TypeScript**: For type checking
+
+## Why We Chose These Libraries
+
+1. **React Native & Expo**: 
+   - Cross-platform development
+   - Rich ecosystem of libraries
+   - Hot reloading for faster development
+
+2. **react-native-reanimated**:
+   - Performance-optimized animations
+   - Native thread execution
+   - Smooth transitions between screens
+
+3. **@gorhom/bottom-sheet**:
+   - Native-like bottom sheet behavior
+   - Smooth animations
+   - Customizable appearance
+
+4. **@shopify/flash-list**:
+   - Better performance than FlatList
+   - Memory efficient
+   - Smooth scrolling
+
+5. **Zustand**:
+   - Simple and intuitive API
+   - No boilerplate
+   - Good TypeScript support
+
+## Trade-offs and Limitations
+
+1. **Message Scrolling Behavior**:
+   - We were unable to implement the smooth upward scrolling of previous messages when new messages arrive
+   - This is a limitation of the current implementation and differs from modern AI chat interfaces like ChatGPT and Gemini
+
+2. **Performance Issues**:
+   - Some janky re-renders occur during message streaming
+   - This is particularly noticeable with long messages or when rendering complex markdown/math content
+
+3. **Math Rendering**:
+   - Math rendering can cause layout shifts during streaming
+   - Complex equations may take longer to render
+
+## AI Tools Usage
+
+We leveraged AI tools extensively throughout the development process:
+
+1. **Prototyping and Architecture**:
+   - Used AI to quickly prototype different approaches to streaming and message handling
+   - Generated initial component structures and state management patterns
+
+2. **Code Generation**:
+   - Generated boilerplate code for components and hooks
+   - Created utility functions for message processing and rendering
+
+3. **Problem Solving**:
+   - Used AI to debug performance issues and rendering problems
+   - Generated alternative implementations for complex features
+
+4. **Documentation**:
+   - Assisted in writing clear and comprehensive documentation
+   - Generated code comments and explanations
+
+## Future Improvements
+
+1. Optimize message rendering to reduce jank
+2. Add proper message scrolling behavior
+3. Improve math rendering performance
+4. Add more customization options for the UI
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
