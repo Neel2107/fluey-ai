@@ -1,31 +1,34 @@
 import SuggestionChip from "@/components/Common/SuggestionChip";
 import ChatInput from "@/components/Home/ChatInput";
 import { useChatStore } from "@/store/chatStore";
-import { router } from 'expo-router';
+import { DrawerNavigationProp } from "@react-navigation/drawer";
+import { router, useNavigation } from 'expo-router';
 import { StatusBar } from "expo-status-bar";
 import {
-  Calculator,
-  FileText,
-  Image,
-  Lightbulb,
-  Menu,
-  MoreHorizontal,
-  UserCircle
+    Calculator,
+    FileText,
+    Image,
+    Lightbulb,
+    Menu,
+    MoreHorizontal,
+    UserCircle
 } from "lucide-react-native";
 import React, { useState } from "react";
 import {
-  Text,
-  TouchableOpacity,
-  View
+    Text,
+    TouchableOpacity,
+    View
 } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { AnimatedScreenContainer } from "./_layout";
 
 export default function Index() {
   const [inputText, setInputText] = useState("");
   const createSession = useChatStore(state => state.createSession);
+  const navigation = useNavigation<DrawerNavigationProp<any>>();
 
   const handleInputChange = (text: string) => {
     setInputText(text);
@@ -46,10 +49,12 @@ export default function Index() {
   };
 
   const openDrawer = () => {
-    router.push('/drawer');
+    navigation.openDrawer();
   };
 
   return (
+    <AnimatedScreenContainer>
+  
     <Animated.View
       entering={FadeIn.duration(200)}
       exiting={FadeOut.duration(200)}
@@ -95,5 +100,6 @@ export default function Index() {
         </KeyboardAvoidingView>
       </SafeAreaView>
     </Animated.View>
+    </AnimatedScreenContainer>
   );
 }

@@ -115,6 +115,7 @@ const ChatHistoryDrawer: React.FC<ChatHistoryDrawerProps> = (props) => {
       ) : (
         <FlashList
           data={filteredSessions}
+          estimatedItemSize={100}
           showsVerticalScrollIndicator={false}
           keyExtractor={(item) => item.id}
           contentContainerStyle={{ paddingHorizontal: 16 }}

@@ -6,9 +6,9 @@ import ChatInput from '@/components/Home/ChatInput';
 import { useChatSession } from '@/hooks/useChatSession';
 import { Message } from '@/types/chat';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
+import { DrawerNavigationProp } from '@react-navigation/drawer';
 import { FlashList } from '@shopify/flash-list';
-import { LinearGradient } from 'expo-linear-gradient';
-import { router, useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useNavigation } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Menu } from 'lucide-react-native';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -16,6 +16,7 @@ import { Alert, Keyboard, Text, TouchableOpacity, View } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { AnimatedScreenContainer } from '../_layout';
 
 
 const ChatScreen = () => {
@@ -23,6 +24,7 @@ const ChatScreen = () => {
   const [inputText, setInputText] = useState("");
   const listRef = useRef<FlashList<Message>>(null);
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
+  const navigation = useNavigation<DrawerNavigationProp<any>>();
   const [forceNextFail, setForceNextFail] = useState(false);
 
   // Use our new chat session hook to manage all chat state
@@ -103,30 +105,30 @@ const ChatScreen = () => {
           onPress: () => {
             const success = deleteSession();
             if (success) {
-              router.push('/');
+              navigation.navigate('index');
             }
           },
         },
       ]
     );
   }, [deleteSession]);
-
   const openDrawer = useCallback(() => {
-    router.push('/drawer');
-  }, []);
+    navigation.openDrawer();
+  }, [navigation]);
 
   // If session doesn't exist, return to home
   useEffect(() => {
     if (!session && id) {
-      router.push('/');
+      navigation.navigate('index');
     }
-  }, [session, id]);
+  }, [session, id, navigation]);
 
   if (!session) {
     return null;
   }
 
   return (
+    <AnimatedScreenContainer>
     <Animated.View
       entering={FadeIn.duration(200)}
       exiting={FadeOut.duration(200)}
@@ -186,6 +188,7 @@ const ChatScreen = () => {
         />
       </SafeAreaView>
     </Animated.View>
+    </AnimatedScreenContainer>
   );
 }
 

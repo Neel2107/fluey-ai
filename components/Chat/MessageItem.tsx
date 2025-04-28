@@ -84,7 +84,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message, onRetry }) =>
                 ? FadeInRight.damping(12)
                 : FadeIn.duration(300)}
             layout={LinearTransition.damping(14)}
-            className={`mb-4 flex ${message.isUser ? 'items-end' : 'items-start'}`}
+            className={`mb-2 flex ${message.isUser ? 'items-end' : 'items-start'}`}
         >
             {message.failed ?
                 <View className="flex-row items-center  px-4 py-3 border border-[#392610] bg-[#2A2520] max-w-[80%] rounded-2xl">

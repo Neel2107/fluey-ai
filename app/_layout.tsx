@@ -1,6 +1,6 @@
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { useFonts } from "expo-font";
-import { Stack } from "expo-router";
+import { Slot, Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from "react";
@@ -36,47 +36,12 @@ export default function RootLayout() {
         <BottomSheetModalProvider>
           <View style={{ flex: 1, backgroundColor: "#18181b" }}>
             <StatusBar style="light" backgroundColor="#18181b" />
-            <Stack
-              screenOptions={{
-                headerShown: false,
-                contentStyle: {
-                  backgroundColor: "#18181b",
-                },
-                animation: 'fade',
-                animationDuration: 200,
-              }}
-            >
-              <Stack.Screen
-                name="index"
-                options={{
-                  title: 'Home',
-                  animation: 'fade',
-                  animationDuration: 200,
-                }}
-              />
-              <Stack.Screen
-                name="chat/[id]"
-                options={{
-                  title: 'Chat',
-                  animation: 'fade',
-                  animationDuration: 200,
-                }}
-              />
-              <Stack.Screen
-                name="math"
-                options={{
-                  title: 'Math',
-                  animation: 'fade',
-                  animationDuration: 200,
-                }}
-              />
-              <Stack.Screen
-                name="drawer"
-                options={{
-                  animation: 'fade',
-                }}
-              />
-            </Stack>
+            <Slot screenOptions={{
+              headerStyle: {
+                backgroundColor: "#18181b",
+              },
+              BackgroundColor: "#18181b",
+            }} />
           </View>
         </BottomSheetModalProvider>
       </KeyboardProvider>
