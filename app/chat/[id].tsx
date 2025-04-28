@@ -131,7 +131,7 @@ const ChatScreen = () => {
       <SafeAreaView className="flex-1 bg-zinc-900">
         <KeyboardAvoidingView className="flex-1" behavior="padding">
           <StatusBar style="light" />
-          <View className="flex-row justify-between items-center p-4 pb-2 border-b border-zinc-800 mb-2">
+          <View className="flex-row justify-between items-center p-4 pb-2  mb-2">
             <View className="flex-row items-center">
               <TouchableOpacity
                 onPress={openDrawer}

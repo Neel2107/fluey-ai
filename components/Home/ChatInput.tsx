@@ -37,7 +37,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
                     paddingBottom: Platform.OS === 'ios' ? 24 : 8,
                 }}>
                 <Animated.View
-                        layout={LinearTransition.easing(Easing.inOut(Easing.cubic))}
+                    layout={LinearTransition.easing(Easing.inOut(Easing.cubic))}
                     style={{
                         flexDirection: "row",
                         alignItems: "center",
@@ -57,7 +57,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
 
                     {/* Expanding TextInput */}
                     <AnimatedTextInput
-                     layout={LinearTransition.easing(Easing.inOut(Easing.cubic))}
+                        layout={LinearTransition.easing(Easing.inOut(Easing.cubic))}
                         style={{
                             flex: 1,
                             color: "#fff",

@@ -58,7 +58,7 @@ export default function Index() {
         className="flex-1 bg-zinc-900">
         <KeyboardAvoidingView className="flex-1" behavior="padding">
           <StatusBar style='light' />
-          <View className="flex-row justify-between items-center p-4 border-b border-zinc-800 mb-2">
+          <View className="flex-row justify-between items-center p-4 mb-2">
             <TouchableOpacity onPress={openDrawer}>
               <Menu color="white" size={24} />
             </TouchableOpacity>
