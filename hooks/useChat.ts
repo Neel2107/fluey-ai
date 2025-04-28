@@ -99,34 +99,12 @@ export const useChat = (initialMessages: Message[] = []) => {
             setNormalIndex(prev => (prev + 1) % NORMAL_RESPONSES.length);
         }
 
-        // Stream the response
-        let currentText = '';
-        const isLongResponse = fullResponse.length > 100;
-        const baseDelay = isLongResponse ? 5 : 15;
-        const batchSize = isLongResponse ? 15 : 5;
-
-        for (let i = 0; i < fullResponse.length; i += batchSize) {
-            if (!isStreamingRef.current) break;
-
-            await new Promise(resolve => setTimeout(resolve, baseDelay));
-            const endIndex = Math.min(i + batchSize, fullResponse.length);
-            currentText += fullResponse.substring(i, endIndex);
-
-            setMessages(prev => prev.map(msg =>
-                msg.id === responseId
-                    ? { ...msg, text: typeof currentText === 'string' ? currentText : '' }
-                    : msg
-            ));
-        }
-
-        // Final update to mark streaming as complete
-        if (isStreamingRef.current) {
-            setMessages(prev => prev.map(msg =>
-                msg.id === responseId
-                    ? { ...msg, isStreaming: false }
-                    : msg
-            ));
-        }
+        // No streaming, just set the full response at once
+        setMessages(prev => prev.map(msg =>
+            msg.id === responseId
+                ? { ...msg, text: typeof fullResponse === 'string' ? fullResponse : '', isStreaming: false }
+                : msg
+        ));
 
         setIsStreaming(false);
         isStreamingRef.current = false;
@@ -179,81 +157,12 @@ export const useChat = (initialMessages: Message[] = []) => {
 
                     const fullResponse = response.content;
 
-                    // Dynamically adjust batch size and delay based on response length
-                    // For very long responses, use larger batches and shorter delays
-                    let batchSize, baseDelay;
-                    const responseLength = fullResponse.length;
-
-                    if (responseLength > 10000) {
-                        // Very long responses (>10K chars)
-                        batchSize = Math.max(50, Math.floor(responseLength / 200));
-                        baseDelay = 2;
-                    } else if (responseLength > 5000) {
-                        // Long responses (5K-10K chars)
-                        batchSize = Math.max(30, Math.floor(responseLength / 250));
-                        baseDelay = 3;
-                    } else if (responseLength > 1000) {
-                        // Medium responses (1K-5K chars)
-                        batchSize = Math.max(20, Math.floor(responseLength / 300));
-                        baseDelay = 5;
-                    } else if (responseLength > 500) {
-                        // Short-medium responses (500-1K chars)
-                        batchSize = 15;
-                        baseDelay = 8;
-                    } else {
-                        // Short responses (<500 chars)
-                        batchSize = 5;
-                        baseDelay = 15;
-                    }
-
-                    console.log(`Optimized streaming: ${responseLength} chars, batch size: ${batchSize}, delay: ${baseDelay}ms`);
-
-                    let currentText = fullResponse.substring(0, 1); // Start with the first character we already set
-
-                    try {
-                        for (let i = batchSize; i < fullResponse.length; i += batchSize) {
-                            if (!isStreamingRef.current) break;
-
-                            await new Promise(resolve => setTimeout(resolve, baseDelay));
-                            const endIndex = Math.min(i + batchSize, fullResponse.length);
-                            currentText += fullResponse.substring(i, endIndex);
-
-                            // Only log every few updates to reduce console noise
-                            if (i % (batchSize * 5) === 0 || i >= fullResponse.length - batchSize) {
-                                console.log(`Streaming update: ${i}/${fullResponse.length} characters (${Math.round(i / fullResponse.length * 100)}%)`);
-                            }
-
-                            // Update message with current text
-                            setMessages(prev => prev.map(msg =>
-                                msg.id === responseId
-                                    ? { ...msg, text: typeof currentText === 'string' ? currentText : '' }
-                                    : msg
-                            ));
-
-                            // For very long responses, we don't need to wait for rendering on every batch
-                            // Only add extra render delay for smaller responses or periodically for long ones
-                            if (responseLength < 1000 || i % (batchSize * 3) === 0) {
-                                await new Promise(resolve => setTimeout(resolve, 5));
-                            }
-                        }
-                    } catch (streamError) {
-                        console.error('Error during streaming:', streamError);
-                        // If streaming fails, at least show the full response
-                        setMessages(prev => prev.map(msg =>
-                            msg.id === responseId
-                                ? { ...msg, text: typeof fullResponse === 'string' ? fullResponse : '', isStreaming: false }
-                                : msg
-                        ));
-                    }
-
-                    // Final update to mark streaming as complete
-                    if (isStreamingRef.current) {
-                        setMessages(prev => prev.map(msg =>
-                            msg.id === responseId
-                                ? { ...msg, isStreaming: false }
-                                : msg
-                        ));
-                    }
+                    // No streaming, just set the full response at once
+                    setMessages(prev => prev.map(msg =>
+                        msg.id === responseId
+                            ? { ...msg, text: typeof fullResponse === 'string' ? fullResponse : '', isStreaming: false }
+                            : msg
+                    ));
                 } else {
                     await simulateResponse(text);
                 }
