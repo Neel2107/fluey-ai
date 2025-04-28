@@ -1,4 +1,5 @@
 import ChatMessages from '@/components/Chat/ChatMessages';
+import { TypewriterText } from '@/components/Chat/TypewriterText';
 import CustomBottomSheet from '@/components/Common/BottomSheet';
 import HamburgerMenu from '@/components/Common/HamburgerMenu';
 import ChatInput from '@/components/Home/ChatInput';
@@ -6,6 +7,7 @@ import { useChatSession } from '@/hooks/useChatSession';
 import { Message } from '@/types/chat';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { FlashList } from '@shopify/flash-list';
+import { LinearGradient } from 'expo-linear-gradient';
 import { router, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Menu } from 'lucide-react-native';
@@ -14,6 +16,7 @@ import { Alert, Keyboard, Text, TouchableOpacity, View } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
 
 const ChatScreen = () => {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -29,10 +32,11 @@ const ChatScreen = () => {
     isStreaming,
     sendMessage,
     deleteSession,
-    clearMessages,
     toggleUseApiResponse,
     useApiResponse,
-    handleRetry
+    handleRetry,
+    isGeneratingTitle,
+    tempTitle
   } = useChatSession(id);
 
   // Auto-scroll to bottom when messages update
@@ -139,9 +143,17 @@ const ChatScreen = () => {
               >
                 <Menu color="white" size={24} />
               </TouchableOpacity>
-              <Text className="text-white font-medium" numberOfLines={1} ellipsizeMode="tail">
-                {session.title}
-              </Text>
+              {isGeneratingTitle ? (
+                <TypewriterText
+                  text={tempTitle || session.title}
+                  style={{ color: 'white', fontWeight: '500' }}
+                  durationPerWord={80}
+                />
+              ) : (
+                <Text className="text-white font-medium" numberOfLines={1} ellipsizeMode="tail">
+                  {session.title}
+                </Text>
+              )}
             </View>
             <View className="flex-row">
               <TouchableOpacity onPress={toggleBottomSheet}>

@@ -4,6 +4,8 @@ import { useChatStore } from '@/store/chatStore';
 import { useChat } from './useChat';
 import { generateMessageId } from '@/utils/messageUtils';
 import { getAIResponse } from '@/utils/api';
+import { generateChatTitle } from '@/utils/titleGenerator';
+
 
 /**
  * A custom hook to manage chat session state and synchronization
@@ -12,9 +14,11 @@ import { getAIResponse } from '@/utils/api';
 export const useChatSession = (sessionId: string | undefined) => {
   // Track if we're processing an initial message
   const processingInitialMessage = useRef(false);
+  const [isGeneratingTitle, setIsGeneratingTitle] = useState(false);
+const [tempTitle, setTempTitle] = useState<string | null>(null);
   
   // Get chat store actions and current session
-  const { updateSession, deleteSession } = useChatStore();
+  const { updateSession, deleteSession, updateSessionTitle } = useChatStore();
   const session = useChatStore(state =>
     state.sessions.find(s => s.id === sessionId)
   );
@@ -44,6 +48,28 @@ export const useChatSession = (sessionId: string | undefined) => {
 
         processingInitialMessage.current = true;
         console.log('New session with initial message detected - processing');
+
+        // Generate a title for this new session
+        const userMessage = session.messages[0].text;
+        console.log('Generating title for initial message:', userMessage);
+        setTempTitle(userMessage);
+        setIsGeneratingTitle(true);
+        
+        // Generate title in the background
+        generateChatTitle(userMessage)
+          .then(title => {
+            console.log('Title generated successfully:', title);
+            if (sessionId) {
+              updateSessionTitle(sessionId, title);
+              setIsGeneratingTitle(false);
+              setTempTitle(null);
+            }
+          })
+          .catch(error => {
+            console.error('Error generating title:', error);
+            setIsGeneratingTitle(false);
+            setTempTitle(null);
+          });
 
         const streamingMessage: Message = {
           id: generateMessageId(),
@@ -130,14 +156,44 @@ export const useChatSession = (sessionId: string | undefined) => {
     }
   }, [session?.id]);
 
-  // Handle sending a new message
   const sendMessage = useCallback(async (text: string, forceNextFail = false) => {
     if (text.trim() && !isStreaming && sessionId) {
+      // If this is the first message in the chat OR the session title is still "New Chat",
+      // we'll use it to generate a title
+      const isFirstMessage = session?.messages.length === 0;
+      const isDefaultTitle = session?.title === 'New Chat';
+      
+      console.log('Sending message:', text.trim());
+      console.log('Is first message?', isFirstMessage);
+      console.log('Is default title?', isDefaultTitle);
+      console.log('Current session messages:', session?.messages.length);
+      
+      if (isFirstMessage || isDefaultTitle) {
+        console.log('Generating title for message:', text.trim());
+        // Set the temporary title to the user's message
+        setTempTitle(text.trim());
+        setIsGeneratingTitle(true);
+        
+        // Generate a title in the background
+        generateChatTitle(text.trim()).then(title => {
+          console.log('Title generated successfully:', title);
+          if (sessionId) {
+            updateSessionTitle(sessionId, title);
+            setIsGeneratingTitle(false);
+            setTempTitle(null);
+          }
+        }).catch(error => {
+          console.error('Error generating title:', error);
+          setIsGeneratingTitle(false);
+          setTempTitle(null);
+        });
+      }
+      
       await addMessage(text.trim(), true, forceNextFail);
       return true;
     }
     return false;
-  }, [addMessage, isStreaming, sessionId]);
+  }, [addMessage, isStreaming, sessionId, session?.messages.length, updateSessionTitle]);
 
   // Handle deleting the current session
   const handleDeleteSession = useCallback(() => {
@@ -194,6 +250,8 @@ export const useChatSession = (sessionId: string | undefined) => {
     clearMessages,
     toggleUseApiResponse,
     useApiResponse,
-    handleRetry
+    handleRetry,
+    isGeneratingTitle,
+    tempTitle
   };
 };
