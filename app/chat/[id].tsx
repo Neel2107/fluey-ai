@@ -5,23 +5,21 @@ import ChatInput from '@/components/Home/ChatInput';
 import { useChatSession } from '@/hooks/useChatSession';
 import { Message } from '@/types/chat';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
-import { DrawerNavigationProp } from '@react-navigation/drawer';
 import { FlashList } from '@shopify/flash-list';
-import { useLocalSearchParams, useNavigation } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Menu } from 'lucide-react-native';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, Keyboard, Text, TouchableOpacity, View } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
+import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { AnimatedScreenContainer } from '../_layout';
 
 const ChatScreen = () => {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [inputText, setInputText] = useState("");
   const listRef = useRef<FlashList<Message>>(null);
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
-  const navigation = useNavigation<DrawerNavigationProp<any>>();
   const [forceNextFail, setForceNextFail] = useState(false);
 
   // Use our new chat session hook to manage all chat state
@@ -57,11 +55,9 @@ const ChatScreen = () => {
     }
   }, [sendMessage, forceNextFail, inputText, isStreaming]);
 
-
   const handleInputChange = useCallback((text: string) => {
     setInputText(text);
   }, []);
-
 
   // Add a dedicated effect to handle scrolling during streaming
   useEffect(() => {
@@ -103,32 +99,34 @@ const ChatScreen = () => {
           onPress: () => {
             const success = deleteSession();
             if (success) {
-              navigation.navigate('index');
+              router.push('/');
             }
           },
         },
       ]
     );
-  }, [deleteSession, navigation]);
+  }, [deleteSession]);
 
   const openDrawer = useCallback(() => {
-    navigation.openDrawer();
-  }, [navigation]);
+    router.push('/drawer');
+  }, []);
 
   // If session doesn't exist, return to home
   useEffect(() => {
     if (!session && id) {
-      navigation.navigate('index');
+      router.push('/');
     }
-  }, [session, id, navigation]);
-
+  }, [session, id]);
 
   if (!session) {
     return null;
   }
 
   return (
-    <AnimatedScreenContainer
+    <Animated.View
+      entering={FadeIn.duration(200)}
+      exiting={FadeOut.duration(200)}
+      className="flex-1 bg-zinc-900"
     >
       <SafeAreaView className="flex-1 bg-zinc-900">
         <KeyboardAvoidingView className="flex-1" behavior="padding">
@@ -174,9 +172,9 @@ const ChatScreen = () => {
           forceNextFail={forceNextFail}
           setForceNextFail={setForceNextFail}
         />
-
       </SafeAreaView>
-    </AnimatedScreenContainer>
+    </Animated.View>
   );
 }
+
 export default ChatScreen;

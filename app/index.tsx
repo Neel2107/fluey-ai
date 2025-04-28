@@ -1,18 +1,15 @@
 import SuggestionChip from "@/components/Common/SuggestionChip";
 import ChatInput from "@/components/Home/ChatInput";
 import { useChatStore } from "@/store/chatStore";
-import { DrawerNavigationProp } from '@react-navigation/drawer';
-import { router, useNavigation } from 'expo-router';
+import { router } from 'expo-router';
 import { StatusBar } from "expo-status-bar";
 import {
-  BarChart3,
   Calculator,
   FileText,
   Image,
   Lightbulb,
   Menu,
   MoreHorizontal,
-  Plus,
   UserCircle
 } from "lucide-react-native";
 import React, { useState } from "react";
@@ -23,13 +20,12 @@ import {
 } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
+import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { AnimatedScreenContainer } from "./_layout";
 
 export default function Index() {
   const [inputText, setInputText] = useState("");
   const createSession = useChatStore(state => state.createSession);
-  const navigation = useNavigation<DrawerNavigationProp<any>>();
 
   const handleInputChange = (text: string) => {
     setInputText(text);
@@ -43,22 +39,23 @@ export default function Index() {
 
       // Navigate to the chat screen with the session ID
       router.push({
-        pathname: "/(drawer)/chat/[id]",
+        pathname: "/chat/[id]",
         params: { id: sessionId }
       });
-
     }
   };
 
   const openDrawer = () => {
-    navigation.openDrawer();
+    router.push('/drawer');
   };
 
   return (
-    <AnimatedScreenContainer
-    >
-      <SafeAreaView 
+    <Animated.View
+      entering={FadeIn.duration(200)}
+      exiting={FadeOut.duration(200)}
       className="flex-1 bg-zinc-900">
+      <SafeAreaView
+        className="flex-1 bg-zinc-900">
         <KeyboardAvoidingView className="flex-1" behavior="padding">
           <StatusBar style='light' />
           <View className="flex-row justify-between items-center p-4 border-b border-zinc-800 mb-2">
@@ -73,7 +70,7 @@ export default function Index() {
             </TouchableOpacity>
           </View>
           <ScrollView
-            className="flex-1 px-3  pt-8"
+            className="flex-1 px-3 pt-8"
             contentContainerStyle={{ flexGrow: 1, paddingBottom: 10 }}
             keyboardShouldPersistTaps="handled"
             keyboardDismissMode="interactive"
@@ -84,7 +81,6 @@ export default function Index() {
             <View className="flex-row flex-wrap justify-center">
               <SuggestionChip icon={Image} text="Create image" />
               <SuggestionChip icon={FileText} text="Summarize text" />
-              {/* <SuggestionChip icon={BarChart3} text="Analyze data" /> */}
               <SuggestionChip icon={Lightbulb} text="Make a plan" />
               <SuggestionChip icon={Calculator} text="Math Examples" onPress={() => router.push('/math')} />
               <SuggestionChip icon={MoreHorizontal} text="More" />
@@ -98,6 +94,6 @@ export default function Index() {
           />
         </KeyboardAvoidingView>
       </SafeAreaView>
-    </AnimatedScreenContainer>
+    </Animated.View>
   );
 }

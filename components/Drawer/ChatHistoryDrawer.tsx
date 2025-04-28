@@ -1,10 +1,11 @@
 import { useChatStore } from '@/store/chatStore';
 import { clearMessages } from '@/utils/storage';
+import { FlashList } from '@shopify/flash-list';
 import { format } from 'date-fns';
 import { router } from 'expo-router';
 import { MessageSquare, Plus, Search, Trash2 } from 'lucide-react-native';
-import React, { useCallback, useState, useEffect } from 'react';
-import { Alert, FlatList, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { Alert, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 interface ChatHistoryDrawerProps {
@@ -14,7 +15,7 @@ interface ChatHistoryDrawerProps {
 
 const ChatHistoryDrawer: React.FC<ChatHistoryDrawerProps> = (props) => {
   const { onDrawerStateChanged } = props;
-  
+
   useEffect(() => {
     onDrawerStateChanged?.(true);
     return () => onDrawerStateChanged?.(false);
@@ -33,19 +34,21 @@ const ChatHistoryDrawer: React.FC<ChatHistoryDrawerProps> = (props) => {
     useChatStore.getState().updateSession(sessionId, []);
     // Clear any saved messages from AsyncStorage
     clearMessages();
+
     // Navigate to the new chat
     router.push(`/chat/${sessionId}`);
-    // Close the drawer
-    props.navigation.closeDrawer();
+    // Close the drawer if we have navigation prop
+    props.navigation?.closeDrawer();
+
     // Clear the search query
     setSearchQuery('');
-}, [createSession, props.navigation]);
+  }, [createSession, props.navigation]);
 
   const handleChatSelect = useCallback((sessionId: string) => {
     // Navigate to the selected chat
     router.push(`/chat/${sessionId}`);
-    // Close the drawer
-    props.navigation.closeDrawer();
+    // Close the drawer if we have navigation prop
+    props.navigation?.closeDrawer();
   }, [props.navigation]);
 
   const handleDeleteChat = useCallback((sessionId: string, sessionTitle: string) => {
@@ -110,7 +113,7 @@ const ChatHistoryDrawer: React.FC<ChatHistoryDrawerProps> = (props) => {
           <Text className="text-zinc-400 mt-2">No matching chats found</Text>
         </View>
       ) : (
-        <FlatList
+        <FlashList
           data={filteredSessions}
           showsVerticalScrollIndicator={false}
           keyExtractor={(item) => item.id}
