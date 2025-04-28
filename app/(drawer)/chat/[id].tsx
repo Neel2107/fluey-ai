@@ -1,4 +1,4 @@
-import { MessageItem } from '@/components/Chat/MessageItem';
+import ChatMessages from '@/components/Chat/ChatMessages';
 import CustomBottomSheet from '@/components/Common/BottomSheet';
 import HamburgerMenu from '@/components/Common/HamburgerMenu';
 import ChatInput from '@/components/Home/ChatInput';
@@ -15,7 +15,6 @@ import { Alert, Keyboard, Text, TouchableOpacity, View } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AnimatedScreenContainer } from '../_layout';
-import ChatMessages from '@/components/Chat/ChatMessages';
 
 const ChatScreen = () => {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -68,7 +67,7 @@ const ChatScreen = () => {
   useEffect(() => {
     // Check if any message is currently streaming
     const streamingMessage = messages.find(msg => msg.isStreaming);
-    
+
     if (streamingMessage) {
       // Create an interval to scroll while streaming is active
       const scrollInterval = setInterval(() => {
@@ -76,7 +75,7 @@ const ChatScreen = () => {
           listRef.current.scrollToEnd({ animated: false });
         }
       }, 300); // Check every 300ms
-      
+
       // Clean up interval when streaming stops
       return () => clearInterval(scrollInterval);
     }
@@ -134,7 +133,7 @@ const ChatScreen = () => {
       <SafeAreaView className="flex-1 bg-zinc-900">
         <KeyboardAvoidingView className="flex-1" behavior="padding">
           <StatusBar style="light" />
-          <View className="flex-row justify-between items-center p-4 pb-2 border-b border-zinc-700 mb-2">
+          <View className="flex-row justify-between items-center p-4 pb-2 border-b border-zinc-800 mb-2">
             <View className="flex-row items-center">
               <TouchableOpacity
                 onPress={openDrawer}
@@ -154,7 +153,7 @@ const ChatScreen = () => {
           </View>
 
           <View className="flex-1" style={{ flex: 1 }}>
-          <ChatMessages 
+            <ChatMessages
               messages={messages}
               onRetry={handleRetry}
               isStreaming={isStreaming}
