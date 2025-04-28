@@ -19,7 +19,7 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
 
   // Auto-scroll to bottom when messages update
   useEffect(() => {
-    if (messages.length > 0) {
+    if (messages.length > 0 && listRef.current) {
       setTimeout(() => {
         listRef.current?.scrollToEnd({ animated: false });
       }, 10);
@@ -28,7 +28,7 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
 
   // Handle scrolling during streaming
   useEffect(() => {
-    if (isStreaming) {
+    if (isStreaming && messages.length > 0) {
       const scrollInterval = setInterval(() => {
         if (listRef.current) {
           listRef.current.scrollToEnd({ animated: false });
@@ -36,7 +36,7 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
       }, 300);
       return () => clearInterval(scrollInterval);
     }
-  }, [isStreaming]);
+  }, [isStreaming, messages.length]);
 
   return (
     <View style={{ flex: 1 }}>
@@ -50,7 +50,9 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
           </View>
         )}
         onContentSizeChange={() => {
-          listRef.current?.scrollToEnd({ animated: !isStreaming });
+          if (messages.length > 0 && listRef.current) {
+            listRef.current.scrollToEnd({ animated: !isStreaming });
+          }
         }}
         estimatedItemSize={100}
         showsVerticalScrollIndicator={false}
@@ -59,11 +61,11 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
         drawDistance={200}
         overrideItemLayout={(layout, item) => {
           if (item.isUser) {
-            layout.size = Math.max(50, item.text.length / 5);
+            layout.size = Math.max(50, (item.text?.length || 0) / 5);
           } else if (item.isStreaming) {
             layout.size = 80;
           } else {
-            layout.size = Math.max(80, item.text.length / 3);
+            layout.size = Math.max(80, (item.text?.length || 0) / 3);
           }
         }}
         viewabilityConfig={{

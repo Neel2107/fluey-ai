@@ -15,6 +15,9 @@ import { TypewriterText } from './TypewriterText';
 
 const containsMarkdown = (text: string): boolean => {
     // Check for common Markdown patterns
+    if (!text) return false;
+    
+    // Check for common Markdown patterns
     const markdownPatterns = [
         /[*_~`]/, // Bold, italic, strikethrough, inline code
         /\[.*?\]\(.*?\)/, // Links
@@ -38,12 +41,13 @@ interface MessageItemProps {
 
 export const MessageItem: React.FC<MessageItemProps> = ({ message, onRetry }) => {
     // Check if text is a simple math expression (wrapped in $ or $$)
-    const isMathExpression = /^\$.*?\$$/.test(message.text.trim()) ||
-        /^\$\$.*?\$\$/.test(message.text.trim());
+    const isMathExpression = message.text ? 
+        (/^\$.*?\$$/.test(message.text.trim()) || /^\$\$.*?\$\$$/.test(message.text.trim())) 
+        : false;
 
     const renderContent = () => {
         // If streaming but we already have some text, show that text instead of skeleton
-        if (message.isStreaming ) {
+        if (message.isStreaming && !message.text) {
             return (
                 <View style={{ flexDirection: 'column', gap: 6 }}>
                     <Skeleton width={160} height={14} />
@@ -56,7 +60,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message, onRetry }) =>
         // If we're streaming but have content, show the content that's available so far
 
         // For math expressions
-        if (isMathExpression) {
+        if (isMathExpression && message.text) {
             return (
                 <MathView
                     math={message.text.replace(/^\$|\$$/g, '')}
@@ -66,13 +70,13 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message, onRetry }) =>
         }
 
         // For markdown content
-        if (containsMarkdown(message.text)) {
+        if (message.text && containsMarkdown(message.text)) {
             return <MarkdownRenderer content={message.text} />;
         }
 
         // For plain text
         if (message.isUser) {
-            return <Text style={{ color: 'white', fontSize: 16 }}>{message.text}</Text>;
+            return <Text style={{ color: 'white', fontSize: 16 }}>{message.text || ''}</Text>;
         }
         return <TypewriterText text={message.text ?? ''} style={{ color: 'white', fontSize: 16 }} />
     };

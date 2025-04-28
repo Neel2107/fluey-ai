@@ -43,7 +43,7 @@ const ChatScreen = () => {
 
   // Auto-scroll to bottom when messages update
   useEffect(() => {
-    if (messages.length > 0) {
+    if (messages.length > 0 && listRef.current) {
       setTimeout(() => {
         listRef.current?.scrollToEnd({ animated: false });
       }, 10);
@@ -70,7 +70,7 @@ const ChatScreen = () => {
     // Check if any message is currently streaming
     const streamingMessage = messages.find(msg => msg.isStreaming);
 
-    if (streamingMessage) {
+    if (streamingMessage && listRef.current) {
       // Create an interval to scroll while streaming is active
       const scrollInterval = setInterval(() => {
         if (listRef.current) {
