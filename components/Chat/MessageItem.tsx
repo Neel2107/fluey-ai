@@ -10,8 +10,8 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Skeleton } from '../Common/Skeleton';
 import { MarkdownRenderer } from './MarkdownRenderer';
+import { TypewriterText } from './TypewriterText';
 
-const AnimatedText = Animated.createAnimatedComponent(Text);
 
 const containsMarkdown = (text: string): boolean => {
     // Check for common Markdown patterns
@@ -43,7 +43,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message, onRetry }) =>
 
     const renderContent = () => {
         // If streaming but we already have some text, show that text instead of skeleton
-        if (message.isStreaming && (!message.text || message.text.length === 0)) {
+        if (message.isStreaming ) {
             return (
                 <View style={{ flexDirection: 'column', gap: 6 }}>
                     <Skeleton width={160} height={14} />
@@ -71,9 +71,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message, onRetry }) =>
         }
 
         // For plain text
-        return <AnimatedText
-            entering={FadeIn.duration(100)}
-            className="text-white text-lg">{message.text}</AnimatedText>;
+        return <TypewriterText text={message.text ?? ''} style={{ color: 'white', fontSize: 18 }} />
     };
 
     return (
