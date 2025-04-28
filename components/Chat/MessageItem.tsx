@@ -71,7 +71,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message, onRetry }) =>
         }
 
         // For plain text
-        return <TypewriterText text={message.text ?? ''} style={{ color: 'white', fontSize: 18 }} />
+        return <TypewriterText text={message.text ?? ''} style={{ color: 'white', fontSize: 16 }} />
     };
 
     return (

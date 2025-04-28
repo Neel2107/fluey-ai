@@ -50,7 +50,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) =
         },
         text: {
             color: colors.text,
-            fontSize: 18,
+            fontSize: 16,
             marginBottom: 8,
         },
     });
