@@ -53,7 +53,7 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
           listRef.current?.scrollToEnd({ animated: !isStreaming });
         }}
         estimatedItemSize={100}
-
+        showsVerticalScrollIndicator={false}
         estimatedListSize={{ height: 500, width: 400 }}
         className="flex-1"
         drawDistance={200}
