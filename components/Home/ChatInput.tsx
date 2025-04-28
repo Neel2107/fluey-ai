@@ -3,8 +3,9 @@ import {
     Plus,
     Send
 } from "lucide-react-native";
-import React from "react";
-import { TextInput, TouchableOpacity, View, Platform } from "react-native";
+import React, { useState } from "react";
+import { Platform, TextInput, TouchableOpacity, View } from "react-native";
+import Animated, { Easing, LinearTransition } from "react-native-reanimated";
 
 interface ChatInputProps {
     inputText: string;
@@ -13,49 +14,92 @@ interface ChatInputProps {
     disabled?: boolean;
 }
 
+const MIN_HEIGHT = 54;
+const MAX_HEIGHT = 120;
+const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
+
+
+
 const ChatInput: React.FC<ChatInputProps> = ({
     inputText,
     onInputChange,
     onSubmit,
     disabled
 }) => {
+    const [inputHeight, setInputHeight] = useState(MIN_HEIGHT);
+
     return (
-        <View className="bg-zinc-900 border-t border-zinc-700">
-            <View className={`p-4 pt-2 ${Platform.OS === 'ios' ? 'pb-8' : ''}`}>
-                <View className="flex-row items-center">
-                    <TouchableOpacity className="p-2 mr-2">
-                        <Plus color="white" size={24} />
+        <View style={{ backgroundColor: "#18181b" }}>
+            <View
+                style={{
+                    paddingHorizontal: 16,
+                    paddingTop: 8,
+                    paddingBottom: Platform.OS === 'ios' ? 24 : 8,
+                }}>
+                <Animated.View
+                        layout={LinearTransition.easing(Easing.inOut(Easing.cubic))}
+                    style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        backgroundColor: "#232329",
+                        borderRadius: 24,
+                        paddingHorizontal: 12,
+                        paddingVertical: 6,
+                        height: inputHeight,
+                        minHeight: MIN_HEIGHT,
+                        maxHeight: MAX_HEIGHT,
+                    }}>
+                    {/* Left icons */}
+                    <TouchableOpacity style={{ padding: 6, marginRight: 2 }}>
+                        <Plus color="#a1a1aa" size={22} />
                     </TouchableOpacity>
-                    <View className={`flex-1 flex-row items-center bg-zinc-700 rounded-full px-4 py-2 mr-2 ${disabled ? 'opacity-50' : ''}`}>
-                        <TextInput
-                            placeholder="Ask anything"
-                            placeholderTextColor="#a1a1aa"
-                            className="flex-1 text-white mr-2"
-                            value={inputText}
-                            onChangeText={onInputChange}
-                            onSubmitEditing={onSubmit}
-                            editable={!disabled}
-                            cursorColor="#fff"
-                            keyboardAppearance="dark"
-                            returnKeyType="send"
-                            enablesReturnKeyAutomatically
-                            // blurOnSubmit={false}
-                        />
-                        <TouchableOpacity
-                            // onPress={onSubmit}
-                            className="p-1"
-                            disabled={disabled || !inputText.trim()}
-                        >
-                            <Mic color="white" size={20} />
-                        </TouchableOpacity>
-                    </View>
+
+
+                    {/* Expanding TextInput */}
+                    <AnimatedTextInput
+                     layout={LinearTransition.easing(Easing.inOut(Easing.cubic))}
+                        style={{
+                            flex: 1,
+                            color: "#fff",
+                            fontSize: 16,
+                            minHeight: MIN_HEIGHT,
+                            maxHeight: MAX_HEIGHT,
+                            height: inputHeight,
+                            paddingHorizontal: 0,
+                            paddingVertical: 0,
+                            marginRight: 8,
+                        }}
+                        placeholder="Ask anything"
+                        placeholderTextColor="#a1a1aa"
+                        value={inputText}
+                        onChangeText={onInputChange}
+                        onSubmitEditing={onSubmit}
+                        editable={!disabled}
+                        cursorColor="#fff"
+                        keyboardAppearance="dark"
+                        returnKeyType="send"
+                        enablesReturnKeyAutomatically
+                        multiline
+                        onContentSizeChange={e => {
+                            const height = Math.min(
+                                Math.max(MIN_HEIGHT, e.nativeEvent.contentSize.height),
+                                MAX_HEIGHT
+                            );
+                            setInputHeight(height);
+                        }}
+                    />
+
+                    {/* Right icons */}
+                    <TouchableOpacity style={{ padding: 6, marginRight: 2 }}>
+                        <Mic color="#a1a1aa" size={22} />
+                    </TouchableOpacity>
                     <TouchableOpacity
                         onPress={onSubmit}
                         disabled={disabled || !inputText.trim()}
                         className={`p-2 mr-1 ${(disabled || !inputText.trim()) ? 'opacity-50' : ''}`}>
                         <Send color="white" size={24} />
                     </TouchableOpacity>
-                </View>
+                </Animated.View>
             </View>
         </View>
     );

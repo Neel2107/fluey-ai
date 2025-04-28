@@ -37,6 +37,7 @@ export default function Index() {
 
   const handleSubmit = () => {
     if (inputText.trim()) {
+      setInputText("");
       // Create a new chat session with the initial message
       const sessionId = createSession(inputText.trim());
 
@@ -46,7 +47,6 @@ export default function Index() {
         params: { id: sessionId }
       });
 
-      setInputText("");
     }
   };
 

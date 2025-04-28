@@ -49,9 +49,9 @@ const ChatScreen = () => {
 
   const handleSubmit = useCallback(async () => {
     if (inputText.trim() && !isStreaming) {
+      setInputText('');
       const success = await sendMessage(inputText.trim(), forceNextFail);
       if (success) {
-        setInputText('');
         Keyboard.dismiss();
         if (forceNextFail) setForceNextFail(false);
       }
