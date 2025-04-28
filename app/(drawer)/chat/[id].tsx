@@ -15,6 +15,7 @@ import { Alert, Keyboard, Text, TouchableOpacity, View } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AnimatedScreenContainer } from '../_layout';
+import ChatMessages from '@/components/Chat/ChatMessages';
 
 const ChatScreen = () => {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -52,23 +53,16 @@ const ChatScreen = () => {
       if (success) {
         setInputText('');
         Keyboard.dismiss();
-
-        // Ensure we scroll to the bottom after adding a new message
-        setTimeout(() => {
-          listRef.current?.scrollToEnd({ animated: true });
-        }, 100);
-
         if (forceNextFail) setForceNextFail(false);
       }
     }
   }, [sendMessage, forceNextFail, inputText, isStreaming]);
 
+
   const handleInputChange = useCallback((text: string) => {
     setInputText(text);
   }, []);
 
-  // Memoize the key extractor
-  const keyExtractor = useCallback((item: Message) => item.id, []);
 
   // Add a dedicated effect to handle scrolling during streaming
   useEffect(() => {
@@ -129,8 +123,6 @@ const ChatScreen = () => {
     }
   }, [session, id, navigation]);
 
-  // Retry handler for failed messages
-  // This function is now handled in the useChatSession hook
 
   if (!session) {
     return null;
@@ -141,8 +133,6 @@ const ChatScreen = () => {
     >
       <SafeAreaView className="flex-1 bg-zinc-900">
         <KeyboardAvoidingView className="flex-1" behavior="padding">
-
-
           <StatusBar style="light" />
           <View className="flex-row justify-between items-center p-4 pb-2 border-b border-zinc-700 mb-2">
             <View className="flex-row items-center">
@@ -164,43 +154,10 @@ const ChatScreen = () => {
           </View>
 
           <View className="flex-1" style={{ flex: 1 }}>
-            <FlashList
-              ref={listRef}
-              data={messages}
-              keyExtractor={keyExtractor}
-              renderItem={({ item }) => (
-                <View className="px-4">
-                  <MessageItem message={item} onRetry={handleRetry} />
-                </View>
-              )}
-              onContentSizeChange={() => {
-                // Only use animated scrolling when not streaming for better performance
-                const isCurrentlyStreaming = messages.some(msg => msg.isStreaming);
-                listRef.current?.scrollToEnd({ animated: !isCurrentlyStreaming });
-              }}
-              estimatedItemSize={100}
-              estimatedListSize={{ height: 500, width: 400 }}
-              className="flex-1"
-              drawDistance={200}
-              overrideItemLayout={(layout, item) => {
-                // Optimize layout calculation for different message types
-                if (item.isUser) {
-                  // User messages are typically shorter
-                  layout.size = Math.max(50, item.text.length / 5);
-                } else if (item.isStreaming) {
-                  // Streaming messages have a fixed height for the skeleton
-                  layout.size = 80;
-                } else {
-                  // AI messages can be longer and more complex
-                  layout.size = Math.max(80, item.text.length / 3);
-                }
-              }}
-              viewabilityConfig={{
-                minimumViewTime: 100,
-                viewAreaCoveragePercentThreshold: 20,
-              }}
-              initialScrollIndex={messages.length > 0 ? messages.length - 1 : undefined}
-              maintainVisibleContentPosition={{ minIndexForVisible: 0 }}
+          <ChatMessages 
+              messages={messages}
+              onRetry={handleRetry}
+              isStreaming={isStreaming}
             />
             <ChatInput
               inputText={inputText}
