@@ -11,25 +11,28 @@ import { Skeleton } from '../Common/Skeleton';
 import { MarkdownRenderer } from './MarkdownRenderer';
 import { TypewriterText } from './TypewriterText';
 
-
 const containsMarkdown = (text: string): boolean => {
     if (!text) return false;
     const markdownPatterns = [
-        /^#+\s/m, // Headers
-        /^\s*[-*+]\s/m, // Lists
-        /^\s*\d+\.\s/m, // Numbered lists
-        /```/, // Code blocks
-        /\[.*?\]\(.*?\)/, // Links
-        /^\s*>/m, // Blockquotes
-        /\$.*?\$/, // Inline math
-        /\$\$.*?\$\$/, // Block math
-        /\|.*\|/, // Tables
-        /[*_~]{2,}/, // Bold, italic, strikethrough
+        /^#+\s/m,                    // Headers
+        /^\s*[-*+]\s/m,             // Lists
+        /^\s*\d+\.\s/m,             // Numbered lists
+        /```/,                      // Code blocks
+        /\[.*?\]\(.*?\)/,           // Links
+        /^\s*>/m,                   // Blockquotes
+        /\$.*?\$/,                  // Inline math
+        /\$\$.*?\$\$/,              // Block math
+        /\|.*\|/,                   // Tables
+        /[*_~`]{1,2}[^*_~`]+[*_~`]{1,2}/, // Bold, italic, strikethrough, inline code
     ];
     return markdownPatterns.some(pattern => pattern.test(text));
 };
 
-
+const isSimpleText = (text: string): boolean => {
+    // Consider text with any markdown or line breaks as complex
+    if (!text) return false;
+    return !containsMarkdown(text) && !text.includes('\n');
+};
 
 interface MessageItemProps {
     message: Message;
@@ -50,18 +53,18 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message, onRetry }) =>
 
         if (!message.text) return null;
 
-        // Clean up text: normalize line breaks and remove extra spaces
+        // Only normalize line endings and remove trailing/leading whitespace
+        // Do NOT remove or modify any markdown symbols
         const cleanText = message.text
-            .replace(/\r\n/g, '\n') // Normalize line endings
-            .replace(/\n{3,}/g, '\n\n') // Replace 3+ line breaks with 2
-            .replace(/\s+\n/g, '\n') // Remove spaces before line breaks
-            .replace(/\n\s+/g, '\n') // Remove spaces after line breaks
-            .trim();
+            .replace(/\r\n/g, '\n')  // Normalize line endings
+            .trim();                 // Only trim start/end
 
-        if (containsMarkdown(cleanText)) {
+        // Use MarkdownRenderer for anything with markdown or multiple lines
+        if (!isSimpleText(cleanText)) {
             return <MarkdownRenderer content={cleanText} />;
         }
 
+        // Use TypewriterText only for simple, single-line, non-markdown text
         if (message.isUser) {
             return (
                 <Text style={{ color: 'white', fontSize: 16, lineHeight: 24 }}>
