@@ -86,7 +86,7 @@ export default function Index() {
             <View className="flex-row flex-wrap justify-center">
               <SuggestionChip icon={Image} text="Create image" />
               <SuggestionChip icon={FileText} text="Summarize text" />
-              <SuggestionChip icon={Lightbulb} text="Make a plan" />
+              <SuggestionChip icon={Lightbulb} text="Markdown Exapmples" onPress={()=> router.navigate("/markdown")} />
               <SuggestionChip icon={Calculator} text="Math Examples" onPress={() => router.push('/math')} />
               <SuggestionChip icon={MoreHorizontal} text="More" />
             </View>

@@ -14,25 +14,27 @@ import { TypewriterText } from './TypewriterText';
 
 
 const containsMarkdown = (text: string): boolean => {
-    // Check for common Markdown patterns
     if (!text) return false;
-    
-    // Check for common Markdown patterns
     const markdownPatterns = [
-        /[*_~`]/, // Bold, italic, strikethrough, inline code
-        /\[.*?\]\(.*?\)/, // Links
-        /^#+\s/, // Headers
-        /^\s*[-*+]\s/, // Lists
-        /^\s*\d+\.\s/, // Numbered lists
+        /^#+\s/m, // Headers
+        /^\s*[-*+]\s/m, // Lists
+        /^\s*\d+\.\s/m, // Numbered lists
         /```/, // Code blocks
-        /\|.*\|/, // Tables
-        /^\s*>/, // Blockquotes
+        /\[.*?\]\(.*?\)/, // Links
+        /^\s*>/m, // Blockquotes
         /\$.*?\$/, // Inline math
         /\$\$.*?\$\$/, // Block math
+        /\|.*\|/, // Tables
+        /[*_~]{2,}/, // Bold, italic, strikethrough (at least two in a row)
     ];
-
     return markdownPatterns.some(pattern => pattern.test(text));
 };
+
+function extractMarkdownFromCodeBlock(text: string): string | null {
+    const match = text.match(/```(?:markdown)?\s*\n([\s\S]*?)\n?```/i);
+    if (match) return match[1].trim();
+    return null;
+}
 
 interface MessageItemProps {
     message: Message;
@@ -46,7 +48,6 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message, onRetry }) =>
         : false;
 
     const renderContent = () => {
-        // If streaming but we already have some text, show that text instead of skeleton
         if (message.isStreaming && !message.text) {
             return (
                 <View style={{ flexDirection: 'column', gap: 6 }}>
@@ -57,24 +58,26 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message, onRetry }) =>
             );
         }
 
-        // If we're streaming but have content, show the content that's available so far
-
-        // For math expressions
         if (isMathExpression && message.text) {
             return (
                 <MathView
-                    math={message.text.replace(/^\$|\$$/g, '')}
+                    math={message.text.replace(/^[\$]|[\$]$/g, '')}
                     style={{ backgroundColor: 'transparent', color: 'white' }}
                 />
             );
         }
 
-        // For markdown content
+        const markdownFromCodeBlock = message.text ? extractMarkdownFromCodeBlock(message.text) : null;
+        if (markdownFromCodeBlock) {
+            console.log('Rendering extracted markdown:', markdownFromCodeBlock);
+            return <MarkdownRenderer content={markdownFromCodeBlock} />;
+        }
+
         if (message.text && containsMarkdown(message.text)) {
+            console.log('Rendering as markdown:', message.text);
             return <MarkdownRenderer content={message.text} />;
         }
 
-        // For plain text
         if (message.isUser) {
             return <Text style={{ color: 'white', fontSize: 16 }}>{message.text || ''}</Text>;
         }
