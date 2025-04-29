@@ -1,17 +1,14 @@
 import { useTheme } from '@/hooks/useTheme';
 import React from 'react';
 import { Platform, StyleSheet, Text, View } from 'react-native';
-import Markdown, { ASTNode } from 'react-native-markdown-display';
+import Markdown from 'react-native-markdown-display';
 import MathView from 'react-native-math-view';
 
 interface MarkdownRendererProps {
     content: string;
 }
 
-// Define the type for the parent node
-interface ParentNode {
-    children: ASTNode[];
-}
+
 
 export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
     const { colors } = useTheme();
@@ -20,51 +17,58 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) =
         // The main container
         body: {
             color: colors.text,
-            backgroundColor: '#0a0a0a',
+            backgroundColor: 'transparent',
+            padding:10
         },
 
         // Headings
         heading1: {
-            flexDirection: 'row',
-            fontSize: 32,
             color: colors.text,
-            marginVertical: 8,
+            fontSize: 32,
             fontWeight: 'bold',
+            marginTop: 20,
+            marginBottom: 10,
+            lineHeight: 40,
         },
         heading2: {
-            flexDirection: 'row',
-            fontSize: 24,
             color: colors.text,
-            marginVertical: 8,
+            fontSize: 28,
             fontWeight: 'bold',
+            marginTop: 16,
+            marginBottom: 8,
+            lineHeight: 36,
         },
         heading3: {
-            flexDirection: 'row',
-            fontSize: 18,
             color: colors.text,
-            marginVertical: 8,
+            fontSize: 24,
             fontWeight: 'bold',
+            marginTop: 16,
+            marginBottom: 8,
+            lineHeight: 32,
         },
         heading4: {
-            flexDirection: 'row',
-            fontSize: 16,
             color: colors.text,
-            marginVertical: 8,
+            fontSize: 20,
             fontWeight: 'bold',
+            marginTop: 14,
+            marginBottom: 8,
+            lineHeight: 28,
         },
         heading5: {
-            flexDirection: 'row',
-            fontSize: 13,
             color: colors.text,
-            marginVertical: 8,
+            fontSize: 18,
             fontWeight: 'bold',
+            marginTop: 12,
+            marginBottom: 8,
+            lineHeight: 26,
         },
         heading6: {
-            flexDirection: 'row',
-            fontSize: 11,
             color: colors.text,
-            marginVertical: 8,
+            fontSize: 16,
             fontWeight: 'bold',
+            marginTop: 12,
+            marginBottom: 8,
+            lineHeight: 24,
         },
 
         // Horizontal Rule
@@ -104,27 +108,35 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) =
         },
         ordered_list: {
             marginVertical: 8,
+            paddingLeft: 20,
         },
         list_item: {
             flexDirection: 'row',
             justifyContent: 'flex-start',
+            alignItems: 'flex-start',
             marginVertical: 4,
         },
         bullet_list_icon: {
             marginLeft: 10,
             marginRight: 10,
             color: colors.text,
+            lineHeight: 24,
         },
         bullet_list_content: {
             flex: 1,
         },
         ordered_list_icon: {
-            marginLeft: 10,
-            marginRight: 10,
             color: colors.text,
+            fontWeight: '400',
+            marginRight: 8,
+            fontSize: 16,
+            lineHeight: 24,
         },
         ordered_list_content: {
+            color: colors.text,
             flex: 1,
+            fontSize: 16,
+            lineHeight: 24,
         },
 
         // Code
@@ -330,34 +342,34 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) =
                     </Text>
                 ),
                 heading1: (node, children, parent, styles) => (
-                    <View key={`heading1-${node.key}`} style={styles.heading1}>
+                    <Text key={`heading1-${node.key}`} style={styles.heading1}>
                         {children}
-                    </View>
+                    </Text>
                 ),
                 heading2: (node, children, parent, styles) => (
-                    <View key={`heading2-${node.key}`} style={styles.heading2}>
+                    <Text key={`heading2-${node.key}`} style={styles.heading2}>
                         {children}
-                    </View>
+                    </Text>
                 ),
                 heading3: (node, children, parent, styles) => (
-                    <View key={`heading3-${node.key}`} style={styles.heading3}>
+                    <Text key={`heading3-${node.key}`} style={styles.heading3}>
                         {children}
-                    </View>
+                    </Text>
                 ),
                 heading4: (node, children, parent, styles) => (
-                    <View key={`heading4-${node.key}`} style={styles.heading4}>
+                    <Text key={`heading4-${node.key}`} style={styles.heading4}>
                         {children}
-                    </View>
+                    </Text>
                 ),
                 heading5: (node, children, parent, styles) => (
-                    <View key={`heading5-${node.key}`} style={styles.heading5}>
+                    <Text key={`heading5-${node.key}`} style={styles.heading5}>
                         {children}
-                    </View>
+                    </Text>
                 ),
                 heading6: (node, children, parent, styles) => (
-                    <View key={`heading6-${node.key}`} style={styles.heading6}>
+                    <Text key={`heading6-${node.key}`} style={styles.heading6}>
                         {children}
-                    </View>
+                    </Text>
                 ),
                 blockquote: (node, children, parent, styles) => (
                     <View key={`blockquote-${node.key}`} style={styles.blockquote}>
@@ -382,17 +394,12 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) =
                 bullet_list_icon: (node, children, parent, styles) => (
                     <Text key={`bullet-icon-${node.key}`} style={styles.bullet_list_icon}>•</Text>
                 ),
-                ordered_list_icon: (node, children, parent, styles) => (
-                    <Text key={`ordered-icon-${node.key}`} style={styles.ordered_list_icon}>{node.index + 1}.</Text>
-                ),
-                bullet_list_content: (node, children, parent, styles) => (
-                    <View key={`bullet-content-${node.key}`} style={styles.bullet_list_content}>
-                        {children}
-                    </View>
-                ),
-                ordered_list_content: (node, children, parent, styles) => (
-                    <View key={`ordered-content-${node.key}`} style={styles.ordered_list_content}>
-                        {children}
+                ordered_list_item: (node, children, parent, styles) => (
+                    <View key={`ordered-list-item-${node.key}`} style={styles.list_item}>
+                        <Text style={styles.ordered_list_icon}>{`${node.index + 1}.`}</Text>
+                        <View style={styles.ordered_list_content}>
+                            {children}
+                        </View>
                     </View>
                 ),
                 link: (node, children, parent, styles) => (
