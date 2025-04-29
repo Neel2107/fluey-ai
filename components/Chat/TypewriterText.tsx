@@ -2,20 +2,18 @@ import React, { useEffect, useRef } from 'react';
 import { TextStyle, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
-interface AnimatedWordProps {
-  word: string;
+interface AnimatedLineProps {
+  line: string;
   index: number;
   currentIndex: Animated.SharedValue<number>;
   style?: TextStyle;
-  isLast: boolean;
 }
 
-const AnimatedWord: React.FC<AnimatedWordProps> = ({
-  word,
+const AnimatedLine: React.FC<AnimatedLineProps> = ({
+  line,
   index,
   currentIndex,
   style,
-  isLast,
 }) => {
   const animatedStyle = useAnimatedStyle(() => ({
     opacity: currentIndex.value >= index ? withTiming(1, { duration: 250 }) : 0,
@@ -23,27 +21,29 @@ const AnimatedWord: React.FC<AnimatedWordProps> = ({
 
   return (
     <Animated.Text style={[style, animatedStyle]}>
-      {word + (isLast ? '' : ' ')}
+      {line}
     </Animated.Text>
   );
 };
 
 interface TypewriterTextProps {
   text: string | undefined | null;
-  durationPerWord?: number; // ms per word
+  durationPerLine?: number; // ms per line
   style?: TextStyle;
 }
 
 export const TypewriterText: React.FC<TypewriterTextProps> = ({
   text,
-  durationPerWord = 80,
+  durationPerLine = 150,
   style,
 }) => {
   const safeText = typeof text === 'string' ? text : '';
-  const words = safeText.split(' ');
   
-  // Create a single shared value for the current word index
-  const currentWordIndex = useSharedValue(-1);
+  // Split by line breaks while preserving empty lines for spacing
+  const lines = safeText.split(/\n/).map(line => line.trim());
+  
+  // Create a single shared value for the current line index
+  const currentLineIndex = useSharedValue(-1);
   const timeoutsRef = useRef<NodeJS.Timeout[]>([]);
 
   useEffect(() => {
@@ -52,13 +52,13 @@ export const TypewriterText: React.FC<TypewriterTextProps> = ({
     timeoutsRef.current = [];
 
     // Reset the animation
-    currentWordIndex.value = -1;
+    currentLineIndex.value = -1;
 
     // Start the animation
-    words.forEach((_, i) => {
+    lines.forEach((_, i) => {
       const timeout = setTimeout(() => {
-        currentWordIndex.value = i;
-      }, i * durationPerWord);
+        currentLineIndex.value = i;
+      }, i * durationPerLine);
       timeoutsRef.current.push(timeout);
     });
 
@@ -66,20 +66,19 @@ export const TypewriterText: React.FC<TypewriterTextProps> = ({
     return () => {
       timeoutsRef.current.forEach(clearTimeout);
       timeoutsRef.current = [];
-      currentWordIndex.value = -1;
+      currentLineIndex.value = -1;
     };
-  }, [safeText, durationPerWord, words.length]);
+  }, [safeText, durationPerLine, lines.length]);
 
   return (
-    <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
-      {words.map((word, i) => (
-        <AnimatedWord
+    <View style={{ flexDirection: 'column' }}>
+      {lines.map((line, i) => (
+        <AnimatedLine
           key={i}
-          word={word}
+          line={line}
           index={i}
-          currentIndex={currentWordIndex}
+          currentIndex={currentLineIndex}
           style={style}
-          isLast={i === words.length - 1}
         />
       ))}
     </View>

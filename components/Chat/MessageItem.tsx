@@ -2,7 +2,6 @@ import { Message } from '@/types/chat';
 import { AlertCircle, RotateCcw } from 'lucide-react-native';
 import React from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
-import MathView from 'react-native-math-view';
 import Animated, {
     FadeIn,
     FadeInRight,
@@ -25,16 +24,12 @@ const containsMarkdown = (text: string): boolean => {
         /\$.*?\$/, // Inline math
         /\$\$.*?\$\$/, // Block math
         /\|.*\|/, // Tables
-        /[*_~]{2,}/, // Bold, italic, strikethrough (at least two in a row)
+        /[*_~]{2,}/, // Bold, italic, strikethrough
     ];
     return markdownPatterns.some(pattern => pattern.test(text));
 };
 
-function extractMarkdownFromCodeBlock(text: string): string | null {
-    const match = text.match(/```(?:markdown)?\s*\n([\s\S]*?)\n?```/i);
-    if (match) return match[1].trim();
-    return null;
-}
+
 
 interface MessageItemProps {
     message: Message;
@@ -42,11 +37,6 @@ interface MessageItemProps {
 }
 
 export const MessageItem: React.FC<MessageItemProps> = ({ message, onRetry }) => {
-    // Check if text is a simple math expression (wrapped in $ or $$)
-    const isMathExpression = message.text ? 
-        (/^\$.*?\$$/.test(message.text.trim()) || /^\$\$.*?\$\$$/.test(message.text.trim())) 
-        : false;
-
     const renderContent = () => {
         if (message.isStreaming && !message.text) {
             return (
@@ -58,69 +48,65 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message, onRetry }) =>
             );
         }
 
-        if (isMathExpression && message.text) {
-            return (
-                <MathView
-                    math={message.text.replace(/^[\$]|[\$]$/g, '')}
-                    style={{ backgroundColor: 'transparent', color: 'white' }}
-                />
-            );
-        }
+        if (!message.text) return null;
 
-        const markdownFromCodeBlock = message.text ? extractMarkdownFromCodeBlock(message.text) : null;
-        if (markdownFromCodeBlock) {
-            console.log('Rendering extracted markdown:', markdownFromCodeBlock);
-            return <MarkdownRenderer content={markdownFromCodeBlock} />;
-        }
+        // Clean up text: normalize line breaks and remove extra spaces
+        const cleanText = message.text
+            .replace(/\r\n/g, '\n') // Normalize line endings
+            .replace(/\n{3,}/g, '\n\n') // Replace 3+ line breaks with 2
+            .replace(/\s+\n/g, '\n') // Remove spaces before line breaks
+            .replace(/\n\s+/g, '\n') // Remove spaces after line breaks
+            .trim();
 
-        if (message.text && containsMarkdown(message.text)) {
-            console.log('Rendering as markdown:', message.text);
-            return <MarkdownRenderer content={message.text} />;
+        if (containsMarkdown(cleanText)) {
+            return <MarkdownRenderer content={cleanText} />;
         }
 
         if (message.isUser) {
-            return <Text style={{ color: 'white', fontSize: 16 }}>{message.text || ''}</Text>;
+            return (
+                <Text style={{ color: 'white', fontSize: 16, lineHeight: 24 }}>
+                    {cleanText}
+                </Text>
+            );
         }
-        return <TypewriterText text={message.text ?? ''} style={{ color: 'white', fontSize: 16 }} />
+
+        return (
+            <TypewriterText 
+                text={cleanText}
+                style={{ color: 'white', fontSize: 16, lineHeight: 24 }}
+            />
+        );
     };
 
     return (
         <Animated.View
             key={message.id}
-            entering={message.isUser
-                ? FadeInRight.damping(12)
-                : FadeIn.duration(300)}
+            entering={message.isUser ? FadeInRight.damping(12) : FadeIn.duration(300)}
             layout={LinearTransition.damping(14)}
             className={`mb-2 flex ${message.isUser ? 'items-end' : 'items-start'}`}
         >
-            {message.failed ?
-                <View className="flex-row items-center  px-4 py-3 border border-[#392610] bg-[#2A2520] max-w-[80%] rounded-2xl">
+            {message.failed ? (
+                <View className="flex-row items-center px-4 py-3 border border-[#392610] bg-[#2A2520] max-w-[80%] rounded-2xl">
                     <AlertCircle color="#FF6B00" size={20} />
                     <Text className="text-[#EA702D] ml-3 flex-1">
                         Hmm... something seems to have gone wrong.
                     </Text>
-                    <TouchableOpacity
-                        onPress={() => onRetry?.(message.id)}
-                        className="ml-2"
-                    >
+                    <TouchableOpacity onPress={() => onRetry?.(message.id)} className="ml-2">
                         <RotateCcw color="#EA702D" size={20} />
                     </TouchableOpacity>
-                </View> :
+                </View>
+            ) : (
                 <Animated.View
-                    entering={message.isUser
-                        ? FadeInRight.damping(12)
-                        : FadeIn.duration(100)}
-                    className={`p-3 rounded-2xl ${message.isUser
-                        ? 'bg-zinc-800 rounded-tr-none'
-                        : ''}`}
+                    entering={message.isUser ? FadeInRight.damping(12) : FadeIn.duration(100)}
+                    className={`p-3 rounded-2xl ${message.isUser ? 'bg-zinc-800 rounded-tr-none' : ''}`}
                     style={{
                         minWidth: message.isStreaming && !message.failed ? 200 : 'auto',
                         maxWidth: message.isUser ? '80%' : '90%',
                     }}
                 >
                     {renderContent()}
-                </Animated.View>}
-
+                </Animated.View>
+            )}
         </Animated.View>
     );
 };
