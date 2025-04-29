@@ -438,20 +438,32 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) =
                 bullet_list: (node, children, parent, styles) => (
                     <AnimatedBlock index={node.index || 0} currentIndex={currentBlockIndex}>
                         <View key={`bullet-list-${node.key}`} style={styles.bullet_list}>
-                            {children}
+                            {React.Children.map(children, (child, index) => 
+                                React.cloneElement(child as React.ReactElement, { 
+                                    key: `bullet-list-item-${node.key}-${index}` 
+                                })
+                            )}
                         </View>
                     </AnimatedBlock>
                 ),
                 ordered_list: (node, children, parent, styles) => (
                     <AnimatedBlock index={node.index || 0} currentIndex={currentBlockIndex}>
                         <View key={`ordered-list-${node.key}`} style={styles.ordered_list}>
-                            {children}
+                            {React.Children.map(children, (child, index) => 
+                                React.cloneElement(child as React.ReactElement, { 
+                                    key: `ordered-list-item-${node.key}-${index}` 
+                                })
+                            )}
                         </View>
                     </AnimatedBlock>
                 ),
                 list_item: (node, children, parent, styles) => (
                     <View key={`list-item-${node.key}`} style={styles.list_item}>
-                        {children}
+                        {React.Children.map(children, (child, index) => 
+                            React.cloneElement(child as React.ReactElement, { 
+                                key: `list-item-content-${node.key}-${index}` 
+                            })
+                        )}
                     </View>
                 ),
                 bullet_list_icon: (node, children, parent, styles) => (

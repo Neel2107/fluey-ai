@@ -129,65 +129,65 @@ const ChatScreen = () => {
 
   return (
     <AnimatedScreenContainer>
-    <Animated.View
-      entering={FadeIn.duration(200)}
-      exiting={FadeOut.duration(200)}
-      className="flex-1 bg-zinc-900"
-    >
-      <SafeAreaView className="flex-1 bg-zinc-900">
-        <KeyboardAvoidingView className="flex-1" behavior="padding">
-          <StatusBar style="light" />
-          <View className="flex-row justify-between items-center p-4 pb-2  mb-2">
-            <View className="flex-row items-center">
-              <TouchableOpacity
-                onPress={openDrawer}
-                className="mr-3"
-              >
-                <Menu color="white" size={24} />
-              </TouchableOpacity>
-              {isGeneratingTitle ? (
-                <TypewriterText
-                  text={tempTitle || session.title}
-                  style={{ color: 'white', fontWeight: '500' }}
-                  durationPerWord={80}
-                />
-              ) : (
-                <Text className="text-white font-medium" numberOfLines={1} ellipsizeMode="tail">
-                  {session.title}
-                </Text>
-              )}
+      <Animated.View
+        entering={FadeIn.duration(200)}
+        exiting={FadeOut.duration(200)}
+        className="flex-1 bg-zinc-900"
+      >
+        <SafeAreaView className="flex-1 bg-zinc-900">
+          <KeyboardAvoidingView className="flex-1" behavior="padding">
+            <StatusBar style="light" />
+            <View className="flex-row justify-between items-center p-4 pb-2  mb-2">
+              <View className="flex-row items-center">
+                <TouchableOpacity
+                  onPress={openDrawer}
+                  className="mr-3"
+                >
+                  <Menu color="white" size={24} />
+                </TouchableOpacity>
+                {isGeneratingTitle ? (
+                  <TypewriterText
+                    text={tempTitle || session.title}
+                    style={{ color: 'white', fontWeight: '500' }}
+                    durationPerLine={80}
+                  />
+                ) : (
+                  <Text className="text-white font-medium" numberOfLines={1} ellipsizeMode="tail">
+                    {session.title}
+                  </Text>
+                )}
+              </View>
+              <View className="flex-row">
+                <TouchableOpacity onPress={toggleBottomSheet}>
+                  <HamburgerMenu onPress={toggleBottomSheet} />
+                </TouchableOpacity>
+              </View>
             </View>
-            <View className="flex-row">
-              <TouchableOpacity onPress={toggleBottomSheet}>
-                <HamburgerMenu onPress={toggleBottomSheet} />
-              </TouchableOpacity>
-            </View>
-          </View>
 
-          <View className="flex-1" style={{ flex: 1 }}>
-            <ChatMessages
-              messages={messages}
-              onRetry={handleRetry}
-              isStreaming={isStreaming}
-            />
-            <ChatInput
-              inputText={inputText}
-              onInputChange={handleInputChange}
-              onSubmit={handleSubmit}
-              disabled={isStreaming}
-            />
-          </View>
-        </KeyboardAvoidingView>
-        <CustomBottomSheet
-          bottomSheetModalRef={bottomSheetModalRef}
-          useApiResponse={useApiResponse}
-          toggleUseApiResponse={toggleUseApiResponse}
-          deleteChat={handleDeleteChat}
-          forceNextFail={forceNextFail}
-          setForceNextFail={setForceNextFail}
-        />
-      </SafeAreaView>
-    </Animated.View>
+            <View className="flex-1" style={{ flex: 1 }}>
+              <ChatMessages
+                messages={messages}
+                onRetry={handleRetry}
+                isStreaming={isStreaming}
+              />
+              <ChatInput
+                inputText={inputText}
+                onInputChange={handleInputChange}
+                onSubmit={handleSubmit}
+                disabled={isStreaming}
+              />
+            </View>
+          </KeyboardAvoidingView>
+          <CustomBottomSheet
+            bottomSheetModalRef={bottomSheetModalRef}
+            useApiResponse={useApiResponse}
+            toggleUseApiResponse={toggleUseApiResponse}
+            deleteChat={handleDeleteChat}
+            forceNextFail={forceNextFail}
+            setForceNextFail={setForceNextFail}
+          />
+        </SafeAreaView>
+      </Animated.View>
     </AnimatedScreenContainer>
   );
 }
