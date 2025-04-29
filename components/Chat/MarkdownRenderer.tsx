@@ -3,6 +3,7 @@ import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Markdown from 'react-native-markdown-display';
 import MathView from 'react-native-math-view';
+import { TypewriterText } from './TypewriterText';
 
 interface MarkdownRendererProps {
     content: string;
@@ -77,9 +78,11 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) =
                     while ((match = regex.exec(node.content)) !== null) {
                         if (match.index > lastIndex) {
                             parts.push(
-                                <Text key={`text-${lastIndex}-${match.index}`} style={styles.text}>
-                                    {node.content.slice(lastIndex, match.index)}
-                                </Text>
+                                <TypewriterText
+                                    key={`text-${lastIndex}-${match.index}`}
+                                    text={node.content.slice(lastIndex, match.index)}
+                                    style={styles.text}
+                                />
                             );
                         }
                         parts.push(
@@ -89,16 +92,18 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) =
                     }
                     if (lastIndex < node.content.length) {
                         parts.push(
-                            <Text key={`text-${lastIndex}-end`} style={styles.text}>
-                                {node.content.slice(lastIndex)}
-                            </Text>
+                            <TypewriterText
+                                key={`text-${lastIndex}-end`}
+                                text={node.content.slice(lastIndex)}
+                                style={styles.text}
+                            />
                         );
                     }
                     if (parts.length > 0) {
                         return <>{parts}</>;
                     }
-                    // Default text rendering
-                    return <Text style={styles.text}>{node.content}</Text>;
+                    // Default text rendering with TypewriterText
+                    return <TypewriterText text={node.content} style={styles.text} />;
                 },
                 code_inline: (node, children, parent, styles) => (
                     <Text style={[styles.code_inline]}>{node.content}</Text>
