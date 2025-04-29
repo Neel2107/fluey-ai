@@ -1,24 +1,62 @@
 import { useTheme } from '@/hooks/useTheme';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Platform, StyleSheet, Text, View } from 'react-native';
 import Markdown from 'react-native-markdown-display';
 import MathView from 'react-native-math-view';
+import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
 interface MarkdownRendererProps {
     content: string;
 }
 
+const AnimatedBlock: React.FC<{ 
+    index: number, 
+    currentIndex: Animated.SharedValue<number>,
+    children: React.ReactNode 
+}> = ({ index, currentIndex, children }) => {
+    const animatedStyle = useAnimatedStyle(() => ({
+        opacity: currentIndex.value >= index ? withTiming(1, { duration: 150 }) : 0,
+    }));
 
+    return (
+        <Animated.View style={animatedStyle}>
+            {children}
+        </Animated.View>
+    );
+};
 
 export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
     const { colors } = useTheme();
+    const currentBlockIndex = useSharedValue(-1);
+    const blockTimeoutsRef = React.useRef<NodeJS.Timeout[]>([]);
+    const BLOCK_DELAY = 100; // ms between blocks
+
+    useEffect(() => {
+        // Reset animation when content changes
+        currentBlockIndex.value = -1;
+        blockTimeoutsRef.current.forEach(clearTimeout);
+        blockTimeoutsRef.current = [];
+
+        // Start animation
+        const blocks = content.split('\n\n');
+        blocks.forEach((_, i) => {
+            const timeout = setTimeout(() => {
+                currentBlockIndex.value = i;
+            }, i * BLOCK_DELAY);
+            blockTimeoutsRef.current.push(timeout);
+        });
+
+        return () => {
+            blockTimeoutsRef.current.forEach(clearTimeout);
+            blockTimeoutsRef.current = [];
+        };
+    }, [content]);
 
     const markdownStyles = StyleSheet.create({
         // The main container
         body: {
             color: colors.text,
             backgroundColor: 'transparent',
-            padding:10
         },
 
         // Headings
@@ -305,19 +343,26 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) =
                     return <Text key={`text-${node.key}`} style={styles.text}>{node.content}</Text>;
                 },
                 paragraph: (node, children, parent, styles) => {
-                    // Block math: if the paragraph is only a block math expression
-                    const blockMathMatch = node.content.match(/^\s*\$\$([\s\S]+?)\$\$\s*$/m);
+                    const blockIndex = node.index || 0;
+                    
+                    // Handle block math
+                    const blockMathMatch = node.content?.match(/^\s*\$\$([\s\S]+?)\$\$\s*$/m);
                     if (blockMathMatch) {
                         return (
-                            <View key={`math-block-${node.key}`} style={markdownStyles.mathContainer}>
-                                <MathView math={blockMathMatch[1]} style={{ marginVertical: 4 }} />
-                            </View>
+                            <AnimatedBlock index={blockIndex} currentIndex={currentBlockIndex}>
+                                <View key={`math-block-${node.key}`} style={markdownStyles.mathContainer}>
+                                    <MathView math={blockMathMatch[1]} style={{ marginVertical: 4 }} />
+                                </View>
+                            </AnimatedBlock>
                         );
                     }
+
                     return (
-                        <View key={`paragraph-${node.key}`} style={styles.paragraph}>
-                            <Text style={styles.text}>{children}</Text>
-                        </View>
+                        <AnimatedBlock index={blockIndex} currentIndex={currentBlockIndex}>
+                            <View key={`paragraph-${node.key}`} style={styles.paragraph}>
+                                <Text style={styles.text}>{children}</Text>
+                            </View>
+                        </AnimatedBlock>
                     );
                 },
                 strong: (node, children, parent, styles) => (
@@ -342,49 +387,67 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) =
                     </Text>
                 ),
                 heading1: (node, children, parent, styles) => (
-                    <Text key={`heading1-${node.key}`} style={styles.heading1}>
-                        {children}
-                    </Text>
+                    <AnimatedBlock index={node.index || 0} currentIndex={currentBlockIndex}>
+                        <Text key={`heading1-${node.key}`} style={styles.heading1}>
+                            {children}
+                        </Text>
+                    </AnimatedBlock>
                 ),
                 heading2: (node, children, parent, styles) => (
-                    <Text key={`heading2-${node.key}`} style={styles.heading2}>
-                        {children}
-                    </Text>
+                    <AnimatedBlock index={node.index || 0} currentIndex={currentBlockIndex}>
+                        <Text key={`heading2-${node.key}`} style={styles.heading2}>
+                            {children}
+                        </Text>
+                    </AnimatedBlock>
                 ),
                 heading3: (node, children, parent, styles) => (
-                    <Text key={`heading3-${node.key}`} style={styles.heading3}>
-                        {children}
-                    </Text>
+                    <AnimatedBlock index={node.index || 0} currentIndex={currentBlockIndex}>
+                        <Text key={`heading3-${node.key}`} style={styles.heading3}>
+                            {children}
+                        </Text>
+                    </AnimatedBlock>
                 ),
                 heading4: (node, children, parent, styles) => (
-                    <Text key={`heading4-${node.key}`} style={styles.heading4}>
-                        {children}
-                    </Text>
+                    <AnimatedBlock index={node.index || 0} currentIndex={currentBlockIndex}>
+                        <Text key={`heading4-${node.key}`} style={styles.heading4}>
+                            {children}
+                        </Text>
+                    </AnimatedBlock>
                 ),
                 heading5: (node, children, parent, styles) => (
-                    <Text key={`heading5-${node.key}`} style={styles.heading5}>
-                        {children}
-                    </Text>
+                    <AnimatedBlock index={node.index || 0} currentIndex={currentBlockIndex}>
+                        <Text key={`heading5-${node.key}`} style={styles.heading5}>
+                            {children}
+                        </Text>
+                    </AnimatedBlock>
                 ),
                 heading6: (node, children, parent, styles) => (
-                    <Text key={`heading6-${node.key}`} style={styles.heading6}>
-                        {children}
-                    </Text>
+                    <AnimatedBlock index={node.index || 0} currentIndex={currentBlockIndex}>
+                        <Text key={`heading6-${node.key}`} style={styles.heading6}>
+                            {children}
+                        </Text>
+                    </AnimatedBlock>
                 ),
                 blockquote: (node, children, parent, styles) => (
-                    <View key={`blockquote-${node.key}`} style={styles.blockquote}>
-                        {children}
-                    </View>
+                    <AnimatedBlock index={node.index || 0} currentIndex={currentBlockIndex}>
+                        <View key={`blockquote-${node.key}`} style={styles.blockquote}>
+                            {children}
+                        </View>
+                    </AnimatedBlock>
                 ),
                 bullet_list: (node, children, parent, styles) => (
-                    <View key={`bullet-list-${node.key}`} style={styles.bullet_list}>
-                        {children}
-                    </View>
+                    <AnimatedBlock index={node.index || 0} currentIndex={currentBlockIndex}>
+                        <View key={`bullet-list-${node.key}`} style={styles.bullet_list}>
+                            {children}
+                        </View>
+                    </AnimatedBlock>
                 ),
                 ordered_list: (node, children, parent, styles) => (
-                    <View key={`ordered-list-${node.key}`} style={styles.ordered_list}>
-                        {children}
-                    </View>
+                    <AnimatedBlock index={node.index || 0} currentIndex={currentBlockIndex}>
+                        <View key={`ordered-list-${node.key}`} style={styles.ordered_list}>
+                            {children}
+                        </View>
+                    </AnimatedBlock>
                 ),
                 list_item: (node, children, parent, styles) => (
                     <View key={`list-item-${node.key}`} style={styles.list_item}>
