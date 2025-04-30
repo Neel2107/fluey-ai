@@ -24,7 +24,7 @@ A React Native chat application with modern AI chat features, including streamin
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/fluey-ai.git
+git clone https://github.com/Neel2107/fluey-ai.git
 cd fluey-ai
 ```
 
@@ -72,7 +72,7 @@ yarn start
 - **Prettier**: For code formatting
 - **TypeScript**: For type checking
 
-## Why We Chose These Libraries
+## Why I Chose These Libraries
 
 1. **React Native & Expo**: 
    - Cross-platform development
@@ -102,7 +102,7 @@ yarn start
 ## Trade-offs and Limitations
 
 1. **Message Scrolling Behavior**:
-   - We were unable to implement the smooth upward scrolling of previous messages when new messages arrive
+   - I was unable to implement the smooth upward scrolling of previous messages when new messages arrive
    - This is a limitation of the current implementation and differs from modern AI chat interfaces like ChatGPT and Gemini
 
 2. **Performance Issues**:
@@ -115,7 +115,7 @@ yarn start
 
 ## AI Tools Usage
 
-We leveraged AI tools extensively throughout the development process:
+I leveraged AI tools extensively throughout the development process:
 
 1. **Prototyping and Architecture**:
    - Used AI to quickly prototype different approaches to streaming and message handling
