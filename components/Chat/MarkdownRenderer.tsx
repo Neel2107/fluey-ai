@@ -327,7 +327,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) =
             marginVertical: 8,
             alignItems: 'center',
             backgroundColor: 'transparent',
-            color: colors.text,
+            color: "white",
         },
     });
 
@@ -357,7 +357,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) =
                             <MathView
                                 key={`math-inline-${node.key}-${match.index}`}
                                 math={match[1]}
-                                style={{ marginHorizontal: 2 }}
+                                style={{ marginHorizontal: 2, color: 'white' }}
                             />
                         );
                         lastIndex = match.index + match[0].length;
@@ -387,7 +387,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) =
                         return (
                             <AnimatedBlock index={blockIndex} currentIndex={currentBlockIndex}>
                                 <View key={`math-block-${node.key}`} style={markdownStyles.mathContainer}>
-                                    <MathView math={blockMathMatch[1]} style={{ marginVertical: 4 }} />
+                                    <MathView math={blockMathMatch[1]} style={{ marginVertical: 4, color: 'white' }} />
                                 </View>
                             </AnimatedBlock>
                         );
