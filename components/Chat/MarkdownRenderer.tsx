@@ -3,20 +3,54 @@ import React, { useEffect } from 'react';
 import { Platform, StyleSheet, Text, View } from 'react-native';
 import Markdown from 'react-native-markdown-display';
 import MathView from 'react-native-math-view';
-import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
 
 interface MarkdownRendererProps {
     content: string;
 }
 
-const AnimatedBlock: React.FC<{ 
-    index: number, 
+const AnimatedBlock: React.FC<{
+    index: number,
     currentIndex: Animated.SharedValue<number>,
-    children: React.ReactNode 
-}> = ({ index, currentIndex, children }) => {
-    const animatedStyle = useAnimatedStyle(() => ({
-        opacity: currentIndex.value >= index ? withTiming(1, { duration: 150 }) : 0,
-    }));
+    blockType?: string,
+    children: React.ReactNode,
+    key?: string
+}> = ({ index, currentIndex, blockType = 'default', children }) => {
+    const translateY = useSharedValue(20);
+    const scale = useSharedValue(0.95);
+
+    const getAnimationDuration = () => {
+        'worklet';
+        switch (blockType) {
+            case 'heading': return 300;
+            case 'list': return 200;
+            case 'code': return 250;
+            default: return 150;
+        }
+    };
+
+    const getAnimationDelay = () => {
+        'worklet';
+        switch (blockType) {
+            case 'list': return index * 100;
+            case 'code': return 150;
+            default: return 0;
+        }
+    };
+
+    const animatedStyle = useAnimatedStyle(() => {
+        const isVisible = currentIndex.value >= index;
+        const duration = getAnimationDuration();
+        const delay = getAnimationDelay();
+
+        return {
+            opacity: withTiming(isVisible ? 1 : 0, { duration }),
+            transform: [
+                { translateY: withDelay(delay, withTiming(isVisible ? 0 : translateY.value, { duration })) },
+                { scale: withDelay(delay, withTiming(isVisible ? 1 : scale.value, { duration })) }
+            ]
+        };
+    });
 
     return (
         <Animated.View style={animatedStyle}>
@@ -29,7 +63,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) =
     const { colors } = useTheme();
     const currentBlockIndex = useSharedValue(-1);
     const blockTimeoutsRef = React.useRef<NodeJS.Timeout[]>([]);
-    const BLOCK_DELAY = 100; // ms between blocks
+    const BLOCK_DELAY = 80; // Slightly faster base delay for smoother experience
 
     useEffect(() => {
         // Reset animation when content changes
@@ -293,12 +327,14 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) =
             marginVertical: 8,
             alignItems: 'center',
             backgroundColor: 'transparent',
+            color: colors.text,
         },
     });
 
     return (
         <Markdown
             style={markdownStyles}
+            mergeStyle={true}
             rules={{
                 text: (node, children, parent, styles) => {
                     // Render inline math within text
@@ -318,9 +354,9 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) =
                             );
                         }
                         parts.push(
-                            <MathView 
-                                key={`math-inline-${node.key}-${match.index}`} 
-                                math={match[1]} 
+                            <MathView
+                                key={`math-inline-${node.key}-${match.index}`}
+                                math={match[1]}
                                 style={{ marginHorizontal: 2 }}
                             />
                         );
@@ -344,7 +380,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) =
                 },
                 paragraph: (node, children, parent, styles) => {
                     const blockIndex = node.index || 0;
-                    
+
                     // Handle block math
                     const blockMathMatch = node.content?.match(/^\s*\$\$([\s\S]+?)\$\$\s*$/m);
                     if (blockMathMatch) {
@@ -378,9 +414,9 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) =
                     <Text key={`code-inline-${node.key}`} style={[styles.text, styles.code_inline]}>{node.content}</Text>
                 ),
                 code_block: (node, children, parent, styles) => (
-                    <Text 
-                        key={`code-block-${node.key}`} 
-                        className='text-base' 
+                    <Text
+                        key={`code-block-${node.key}`}
+                        className='text-base'
                         style={[styles.code_block]}
                     >
                         {node.content}
@@ -436,22 +472,24 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) =
                     </AnimatedBlock>
                 ),
                 bullet_list: (node, children, parent, styles) => (
-                    <AnimatedBlock index={node.index || 0} currentIndex={currentBlockIndex}>
-                        <View key={`bullet-list-${node.key}`} style={styles.bullet_list}>
-                            {React.Children.map(children, (child, index) => 
-                                React.cloneElement(child as React.ReactElement, { 
-                                    key: `bullet-list-item-${node.key}-${index}` 
+                    <AnimatedBlock key={`bullet-block-${node.key}`} index={node.index || 0} currentIndex={currentBlockIndex} blockType="list">
+                        <View style={styles.bullet_list}>
+                            {React.Children.map(children, (child, index) =>
+                                React.cloneElement(child as React.ReactElement, {
+                                    key: `bullet-item-${node.key}-${index}`,
+                                    index
                                 })
                             )}
                         </View>
                     </AnimatedBlock>
                 ),
                 ordered_list: (node, children, parent, styles) => (
-                    <AnimatedBlock index={node.index || 0} currentIndex={currentBlockIndex}>
-                        <View key={`ordered-list-${node.key}`} style={styles.ordered_list}>
-                            {React.Children.map(children, (child, index) => 
-                                React.cloneElement(child as React.ReactElement, { 
-                                    key: `ordered-list-item-${node.key}-${index}` 
+                    <AnimatedBlock key={`ordered-block-${node.key}`} index={node.index || 0} currentIndex={currentBlockIndex} blockType="list">
+                        <View style={styles.ordered_list}>
+                            {React.Children.map(children, (child, index) =>
+                                React.cloneElement(child as React.ReactElement, {
+                                    key: `ordered-item-${node.key}-${index}`,
+                                    index
                                 })
                             )}
                         </View>
@@ -459,9 +497,9 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) =
                 ),
                 list_item: (node, children, parent, styles) => (
                     <View key={`list-item-${node.key}`} style={styles.list_item}>
-                        {React.Children.map(children, (child, index) => 
-                            React.cloneElement(child as React.ReactElement, { 
-                                key: `list-item-content-${node.key}-${index}` 
+                        {React.Children.map(children, (child, index) =>
+                            React.cloneElement(child as React.ReactElement, {
+                                key: `list-content-${node.key}-${index}`
                             })
                         )}
                     </View>
