@@ -62,10 +62,10 @@ const MARKDOWN_EXAMPLES = [
 ];
 
 export default function MarkdownTestScreen() {
-  const [markdown, setMarkdown] = useState(MARKDOWN_EXAMPLES[0].content);
+
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#0a0a0a' }}>
+    <SafeAreaView className="flex-1 bg-zinc-900">
        <View className="flex-row items-center justify-between px-4 py-3 border-b border-zinc-800">
                 <View className="flex-row items-center">
                     <TouchableOpacity
