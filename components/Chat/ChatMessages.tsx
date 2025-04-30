@@ -2,10 +2,7 @@ import { Message } from '@/types/chat';
 import { FlashList } from '@shopify/flash-list';
 import React, { useEffect, useRef } from 'react';
 import { View } from 'react-native';
-import { LegendList, LegendListRef, LegendListRenderItemProps } from "@legendapp/list"
-
 import { MessageItem } from './MessageItem';
-
 
 interface ChatMessagesProps {
   messages: Message[];
@@ -18,8 +15,7 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
   onRetry,
   isStreaming
 }) => {
-  // const listRef = useRef<FlashList<Message>>(null);
-  const listRef = useRef<LegendListRef | null>(null)
+  const listRef = useRef<FlashList<Message>>(null);
 
   // Auto-scroll to bottom when messages update
   useEffect(() => {
@@ -44,7 +40,7 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
 
   return (
     <View style={{ flex: 1 }}>
-      <LegendList
+      <FlashList
         ref={listRef}
         data={messages}
         keyExtractor={(item) => item.id}
@@ -60,24 +56,24 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
         }}
         estimatedItemSize={100}
         showsVerticalScrollIndicator={false}
-        // estimatedListSize={{ height: 500, width: 400 }}
+        estimatedListSize={{ height: 500, width: 400 }}
         className="flex-1"
         drawDistance={200}
-        // overrideItemLayout={(layout, item) => {
-        //   if (item.isUser) {
-        //     layout.size = Math.max(50, (item.text?.length || 0) / 5);
-        //   } else if (item.isStreaming) {
-        //     layout.size = 80;
-        //   } else {
-        //     layout.size = Math.max(80, (item.text?.length || 0) / 3);
-        //   }
-        // }}
+        overrideItemLayout={(layout, item) => {
+          if (item.isUser) {
+            layout.size = Math.max(50, (item.text?.length || 0) / 5);
+          } else if (item.isStreaming) {
+            layout.size = 80;
+          } else {
+            layout.size = Math.max(80, (item.text?.length || 0) / 3);
+          }
+        }}
         viewabilityConfig={{
           minimumViewTime: 100,
           viewAreaCoveragePercentThreshold: 20,
         }}
         initialScrollIndex={messages.length > 0 ? messages.length - 1 : undefined}
-        // maintainVisibleContentPosition={{ minIndexForVisible: 0 }}
+        maintainVisibleContentPosition={{ minIndexForVisible: 0 }}
       />
     </View>
   );
