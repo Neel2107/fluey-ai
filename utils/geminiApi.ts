@@ -1,4 +1,4 @@
-import { GoogleGenAI } from '@google/genai';
+import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai';
 import { Message } from '@/types/chat';
 
 // Create a separate interface file to avoid circular dependency
@@ -20,27 +20,66 @@ if (!GEMINI_API_KEY) {
     throw new Error('GEMINI_API_KEY environment variable is not set');
 }
 
-const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
+const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 
 export const getGeminiResponse = async (messages: Message[]): Promise<AIResponse> => {
     try {
+        console.log('Processing messages for Gemini API:', messages.length);
+        
+        // Convert our app messages to Gemini chat format
+        const geminiMessages = messages.map(msg => ({
+            role: msg.isUser ? 'user' : 'model',
+            parts: [{ text: msg.text }],
+        }));
+        
+        console.log('Formatted messages for Gemini:', JSON.stringify(geminiMessages.slice(0, 2)));
+        
+        // Use the chat model
+        const model = genAI.getGenerativeModel({ 
+            model: 'gemini-1.5-flash',
+            safetySettings: [
+                {
+                    category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+                    threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+                },
+                {
+                    category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+                    threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+                },
+                {
+                    category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+                    threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+                },
+                {
+                    category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+                    threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+                },
+            ],
+        });
+        
+        // Create a chat session
+        const chat = model.startChat({
+            history: geminiMessages.slice(0, -1),
+            generationConfig: {
+                maxOutputTokens: 2048,
+            },
+        });
+        
+        // Get the last message to send as the current query
         const lastMessage = messages[messages.length - 1];
         
-        const response = await ai.models.generateContent({
-            model: 'gemini-2.0-flash-001',
-            contents: lastMessage.text,
-        });
-
-        // Remove trailing newlines from the response text
-        const cleanedContent = response?.text?.trim() ?? '';
-
-        console.log('Gemini API Response:', JSON.stringify(response, null, 2));
+        // Send the last message to the chat
+        const result = await chat.sendMessage(lastMessage.text);
+        const response = await result.response;
+        const responseText = response.text();
+        
+        console.log('Gemini API Response received, length:', responseText.length);
 
         return {
             id: `gemini-${Date.now()}`,
             provider: 'google-gemini',
-            model: 'gemini-2.0-flash-001',
-            content: cleanedContent,
+            model: 'gemini-1.5-flash',
+            content: responseText,
             usage: {
                 prompt_tokens: 0,
                 completion_tokens: 0,

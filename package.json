@@ -17,6 +17,7 @@
   "dependencies": {
     "@expo/vector-icons": "^14.0.2",
     "@google/genai": "^0.10.0",
+    "@google/generative-ai": "^0.24.1",
     "@gorhom/bottom-sheet": "^5.1.2",
     "@legendapp/list": "^1.0.3",
     "@react-native-async-storage/async-storage": "1.23.1",
@@ -24,6 +25,7 @@
     "@react-navigation/bottom-tabs": "^7.2.0",
     "@react-navigation/drawer": "^7.1.1",
     "@react-navigation/native": "^7.0.14",
+    "@shopify/flash-list": "1.7.3",
     "axios": "^1.8.4",
     "date-fns": "^4.1.0",
     "expo": "~52.0.46",
@@ -65,8 +67,7 @@
     "react-native-web": "~0.19.13",
     "react-native-webview": "13.12.5",
     "tailwindcss": "^3.4.17",
-    "zustand": "^5.0.3",
-    "@shopify/flash-list": "1.7.3"
+    "zustand": "^5.0.3"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

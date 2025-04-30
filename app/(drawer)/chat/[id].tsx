@@ -148,11 +148,11 @@ const ChatScreen = () => {
                 {isGeneratingTitle ? (
                   <TypewriterText
                     text={tempTitle || session.title}
-                    style={{ color: 'white', fontWeight: '500' }}
-                    durationPerLine={80}
+                    style={{ color: 'white', fontWeight: '500', fontSize: 18 }}
+                    durationPerWord={80}
                   />
                 ) : (
-                  <Text className="text-white font-medium" numberOfLines={1} ellipsizeMode="tail">
+                  <Text className="text-white text-lg font-medium" numberOfLines={1} ellipsizeMode="tail">
                     {session.title}
                   </Text>
                 )}
