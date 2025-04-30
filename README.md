@@ -11,6 +11,15 @@ A React Native chat application with modern AI chat features, including streamin
 - 🔄 State management with Zustand
 - 💾 Chat session persistence
 
+### Screen Recordings  
+
+[![Embedded screen recording here, showcasing the working app.]](https://github.com/user-attachments/assets/5835eef5-cd11-4445-a5dc-d0d1f53f14e2)  
+
+[![Embedded screen recording here, showcasing the working app.]](https://github.com/user-attachments/assets/b381a83e-1610-42b2-a3cb-c41545177287)  
+
+[![Embedded screen recording here, showcasing the working app.]](https://github.com/user-attachments/assets/884b01dd-c31f-4861-b184-4b00ab1cc040)  
+
+
 ## Setup Instructions
 
 1. Clone the repository:
