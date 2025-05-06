@@ -59,7 +59,6 @@ export async function getAIResponse(
     { simulateFlaky = false }: { simulateFlaky?: boolean } = {}
 ) {
     // Simulate network delay
-    await new Promise(res => setTimeout(res, 1200 + Math.random() * 1200));
 
     if (simulateFlaky) { 
         throw new Error('Network error: Simulated flaky network');
@@ -78,6 +77,7 @@ export async function getAIResponse(
         }
 
         if (!OPENROUTER_API_KEY && !GEMINI_API_KEY) {
+            await new Promise(res => setTimeout(res, 1200 + Math.random() * 1200));
             console.log('No API keys configured. Using fallback response mechanism.');
             return generateFallbackResponse(messages);
         }
