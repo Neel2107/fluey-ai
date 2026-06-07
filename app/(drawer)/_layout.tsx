@@ -1,5 +1,6 @@
 import ChatHistoryDrawer from '@/components/Drawer/ChatHistoryDrawer';
-import { DrawerContentComponentProps, useDrawerProgress } from '@react-navigation/drawer';
+import { useDrawerProgress } from 'expo-router/build/react-navigation/drawer';
+import type { DrawerContentComponentProps } from 'expo-router/build/react-navigation/drawer';
 import { Drawer } from 'expo-router/drawer';
 import { StatusBar } from 'expo-status-bar';
 import React from 'react';

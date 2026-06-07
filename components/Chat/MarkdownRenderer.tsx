@@ -2,7 +2,7 @@ import { useTheme } from '@/hooks/useTheme';
 import React, { useEffect } from 'react';
 import { Platform, StyleSheet, Text, View } from 'react-native';
 import Markdown from 'react-native-markdown-display';
-import MathView from 'react-native-math-view';
+import MathView from '@/components/Common/MathView';
 import Animated, { useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
 
 interface MarkdownRendererProps {

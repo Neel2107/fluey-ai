@@ -1,7 +1,7 @@
 import { router } from 'expo-router';
 import { ArrowLeft, Calculator } from 'lucide-react-native';
 import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
-import MathView from 'react-native-math-view';
+import MathView from '@/components/Common/MathView';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function MathScreen() {

@@ -1,7 +1,7 @@
 import SuggestionChip from "@/components/Common/SuggestionChip";
 import ChatInput from "@/components/Home/ChatInput";
 import { useChatStore } from "@/store/chatStore";
-import { DrawerNavigationProp } from "@react-navigation/drawer";
+import type { DrawerNavigationProp } from "expo-router/build/react-navigation/drawer";
 import { router, useNavigation } from 'expo-router';
 import { StatusBar } from "expo-status-bar";
 import {

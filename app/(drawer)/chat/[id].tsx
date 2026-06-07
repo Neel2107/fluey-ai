@@ -6,7 +6,7 @@ import ChatInput from '@/components/Home/ChatInput';
 import { useChatSession } from '@/hooks/useChatSession';
 import { Message } from '@/types/chat';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
-import { DrawerNavigationProp } from '@react-navigation/drawer';
+import type { DrawerNavigationProp } from 'expo-router/build/react-navigation/drawer';
 import { FlashList } from '@shopify/flash-list';
 import { useLocalSearchParams, useNavigation } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';

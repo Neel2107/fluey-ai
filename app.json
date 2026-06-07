@@ -7,7 +7,6 @@
     "icon": "./assets/images/fluey-logo.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.flueyai.app",
@@ -22,7 +21,6 @@
         "foregroundImage": "./assets/images/fluey-logo.png",
         "backgroundColor": "#18181b"
       },
-      "newArchEnabled": false,
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO"
