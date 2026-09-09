@@ -1,0 +1,75 @@
+diff --git a/node_modules/decode-uri-component/index.js b/node_modules/decode-uri-component/index.js
+--- a/node_modules/decode-uri-component/index.js
++++ b/node_modules/decode-uri-component/index.js
+@@ -75,6 +75,14 @@
+ 				continue;
+ 			}
+ 
++			// Preserve the package's UTF-16 BOM fallback without reprocessing decoded text.
++			const bom = input.slice(position, position + 6);
++			if (bom === '%FE%FF' || bom === '%FF%FE') {
++				output += '\uFFFD\uFFFD';
++				position += 6;
++				continue;
++			}
++
+ 			const sequenceLength = utf8SequenceLength(firstByte.byte);
+ 
+ 			// Continuation byte or invalid lead byte — emit one `%XX` literally.
+@@ -110,8 +118,9 @@
+ 				}
+ 			}
+ 
+-			// Missing continuation bytes or decode failure — emit the first byte literally.
+-			output += input.slice(position, position + 3);
++			// Preserve truncated uppercase %C2 replacement on the original bytes only.
++			const literal = input.slice(position, position + 3);
++			output += literal === '%C2' ? '\uFFFD' : literal;
+ 			position += 3;
+ 		}
+ 
+@@ -120,41 +129,9 @@
+ }
+ 
+ function customDecodeURIComponent(input) {
+-	// Keep track of all the replacements and prefill the map with the `BOM`
+-	const replaceMap = {
+-		'%FE%FF': '\uFFFD\uFFFD',
+-		'%FF%FE': '\uFFFD\uFFFD',
+-	};
+-
+-	// Find percent-encoded runs separated by literal text or lone `%` characters.
+-	let match = multiMatcher.exec(input);
+-
+-	while (match) {
+-		try {
+-			// Decode as big chunks as possible
+-			replaceMap[match[0]] = decodeURIComponent(match[0]);
+-		} catch {
+-			const result = decode(match[0]);
+-
+-			if (result !== match[0]) {
+-				replaceMap[match[0]] = result;
+-			}
+-		}
+-
+-		match = multiMatcher.exec(input);
+-	}
+-
+-	// Add `%C2` at the end of the map to make sure it does not replace the combinator before everything else
+-	replaceMap['%C2'] = '\uFFFD';
+-
+-	const entries = Object.keys(replaceMap);
+-
+-	for (const key of entries) {
+-		// Replace all decoded components
+-		input = input.replace(new RegExp(key, 'g'), replaceMap[key]);
+-	}
+-
+-	return input;
++	// Decode each original run once. A replacement map rescans the entire input
++	// for every unique run, making malformed inputs with many runs quadratic.
++	return input.replace(multiMatcher, run => decode(run));
+ }
+ 
+ export default function decodeUriComponent(encodedURI) {
